@@ -13,9 +13,9 @@ roadmap, staying a faithful **subset** of <https://github.com/hollow/dotfiles>:
 a `diff` against upstream should show only deletions, the previously-trimmed
 files, and a small set of clearly-flagged intentional deviations.
 
-Ring 2 adds a handful of modern CLI tools, a few shell niceties, impersonal git
-defaults, and a clean per-user git-identity mechanism. fzf, atuin, git signing,
-and personal git aliases remain deferred.
+Ring 2 adds modern CLI tools, a few shell niceties, the full git alias set with
+its supporting `git-*` subcommands, impersonal git defaults, and a clean
+per-user git-identity mechanism. fzf, atuin, and git signing remain deferred.
 
 ## Scope (decided)
 
@@ -25,12 +25,14 @@ In scope:
   `wget`, and `glow`/`glamour`.
 - **Shell niceties:** pager/`less` config, `colored-man-pages`, `you-should-use`,
   `dircolors` (LS_COLORS).
-- **git:** impersonal `git/config` defaults, the global `git/ignore`, the 8
-  self-contained git aliases, and per-user identity via a git `[include]`.
+- **git:** impersonal `git/config` (settings **and** the generic alias block),
+  the global `git/ignore`, all 16 git aliases plus the `git-*` subcommands they
+  need, and per-user identity via a git `[include]`.
 
-Out of scope (still deferred): fzf/fzf-tab, atuin, git signing &
-identity-in-tracked-config, the personal git aliases that depend on dropped
-`git-*` subcommands, and a general zsh personal-override layer.
+Out of scope (still deferred): fzf/fzf-tab, atuin, git signing (SSH/GPG
+integration — to be handled in a later ring), the `git-each`/`git-parallel`
+batch aliases (depend on the dropped `:each`/`:parallel`), and a general zsh
+personal-override layer.
 
 ## Faithfulness principle (carried over)
 
@@ -41,10 +43,10 @@ explicit and enumerated below.
 
 ### Intentional deviations (net-new, not in upstream)
 
-1. `brew "glow"` in the `Brewfile` — upstream's `Brewfile` does not list glow
-   (its glow config exists but it isn't brew-installed there). The repo owner
-   will add glow upstream, after which this returns to a subset.
-2. `git/config` ends with an `[include] path = local` directive (see below).
+1. `brew "glow"` in the `Brewfile` — upstream's `Brewfile` does not list glow.
+   The repo owner will add glow upstream, after which this returns to a subset.
+2. `git/config` omits upstream's personal sections and ends with an
+   `[include] path = local` directive (see below).
 3. `git/local.example` — a tracked template for per-user git identity.
 4. `git/.gitignore` — ignores the untracked `git/local` (follows the upstream
    per-directory `.gitignore` convention, e.g. `auth0/.gitignore`).
@@ -56,6 +58,8 @@ explicit and enumerated below.
 - `Brewfile` — add `bat`, `duf`, `eza`, `fd`, `glow`, `ripgrep` (alphabetical;
   `rsync`/`wget` already present from Ring 1).
 - `zsh/.zshrc` — add the tool/nicety/git blocks below (strict subset).
+- `install.sh` — seed `git/local` from the template (one added step).
+- `README.md` — add a short "set your git identity" note.
 
 ### Create — vendored verbatim from `hollow/dotfiles@main`
 
@@ -64,14 +68,17 @@ explicit and enumerated below.
 - `wgetrc`
 - `glow/glow.yml`
 - `glow/styles/catppuccin-mocha.json`
+- `zsh/git-main-branch`, `zsh/git-latest`, `zsh/git-cleanup`,
+  `zsh/git-checkout-latest` — the `git-*` subcommands the aliases need
+  (executable; see "git subcommands" below).
 
 ### Create — net-new (intentional deviations)
 
-- `git/config` — impersonal settings + the `[include]` directive.
-- `git/local.example` — commented `[user]` identity template.
+- `git/config` — impersonal settings + alias block + the `[include]` directive.
+- `git/local.example` — commented `[user]` identity template (name + email).
 - `git/.gitignore` — `/local`.
 
-### Unchanged / not added
+### Not added
 
 - `ripgrep` and `fd` are **Brewfile-only** — upstream removed their no-op
   `zi auto … for` null-plugin lines, so there is no `.zshrc` block for either.
@@ -136,7 +143,7 @@ zi auto has"duf" wait for duf
 zi auto has"eza" wait for eza
 ```
 
-**git (completion + the 8 self-contained aliases only):**
+**git (completion + all 16 aliases):**
 
 ```zsh
 # git: distributed version control system
@@ -146,16 +153,25 @@ zi auto id-as"git" as"completion" blockf mv"git->_git" wait for \
 
 alias ga="git add --all"
 alias gap="git add --patch"
+alias gcl="git checkout-latest main"
+alias gcm="git co \$(git main-branch)"
+alias gcu="git co upstream"
 alias gd="git diff"
+alias gdc="git diff --cached"
+alias gdm="git diff origin/\$(git main-branch)"
+alias gdu="git diff upstream/\$(git main-branch)"
 alias gf="git fetch --prune"
+alias gl="git lg"
 alias gp="git pull"
 alias gpr="git pull --rebase --autostash"
 alias grh="git reset HEAD"
 alias gsp="git show -p"
+alias s="git st ."
 ```
 
-Dropped (need dropped `git-*` subcommands or git config aliases): `gcl`, `gcm`,
-`gcu`, `gdc`, `gdm`, `gdu`, `gl`, `s`, and the `git-each`/`git-parallel` aliases.
+Note: `gdc` is now `git diff --cached` (self-contained) per the upstream update;
+the old `dc` git-config alias is gone. The `git-each`/`git-parallel` aliases are
+**excluded** (they need the dropped `:each`/`:parallel`).
 
 **glamour/glow:**
 
@@ -211,79 +227,82 @@ if has tput; then
 fi
 ```
 
+## git subcommands (`git-*` scripts)
+
+Several aliases invoke custom git subcommands. git finds `git-<name>` on `PATH`;
+`zsh/` is already on `PATH` (`path+=("${ZDOTDIR}")`), so these scripts live in
+`zsh/`. They are **vendored verbatim** from upstream and must keep the
+**executable bit** (git executes them as subprocesses).
+
+Dependency closure of the aliases:
+
+- `gcl` → `git checkout-latest main` → `git-checkout-latest`, which calls
+  `git-main-branch`, `git-latest`, and `git-cleanup`.
+- `gcm`, `gdm`, `gdu` → `git-main-branch`.
+- `git-latest` → `git-main-branch`.
+
+So four scripts are vendored: `git-main-branch`, `git-latest`, `git-cleanup`,
+`git-checkout-latest`. They are also picked up by the existing
+`autoload -Uz ${ZDOTDIR}/*(.N:t)` glob (harmless; git invokes the PATH
+executable). The remaining aliases use the git-config aliases below
+(`co`, `lg`, `st`) or are plain git commands.
+
 ## `Brewfile` additions
 
 Final brew list (alphabetical) gains `bat`, `duf`, `eza`, `fd`, `glow`,
 `ripgrep`. All exist in upstream's `Brewfile` **except `glow`** (the single
 flagged deviation, pending the upstream add).
 
-## git identity via `[include]`
+## `git/config`
 
-`git/config` is tracked and impersonal, ending with:
+Tracked and impersonal. Built from upstream's `git/config` by **keeping these
+sections verbatim** (tab-indented, byte-identical):
+
+- `[alias]` — the full upstream block: `aliases`, `amend`, `b`, `ci`, `co`,
+  `lg`, `ls`, `st`, `stat`, `tags`, `w`. (Upstream no longer defines `dc`.)
+- `[advice] detachedHead = false`
+- `[branch] sort = -committerdate`
+- `[color] ui = true`
+- `[diff] renames = copies`
+- `[init] defaultBranch = main`
+- `[pull] ff = only`
+- `[push] followTags = true`, `autoSetupRemote = true`
+- `[rerere] enabled = true`
+
+**Omitted** (personal / deferred): `[user]`, `[gpg]`, `[commit] gpgsign`, and
+`[filter "lfs"]`.
+
+**Appended** (net-new): the include directive. In the actual file it is
+tab-indented like every git-config value:
 
 ```ini
 [include]
     path = local
 ```
 
+## git identity via `[include]`
+
 A relative include `path` resolves against the including file's directory, so
-this reads `~/.config/git/local`. That file is per-user and untracked, holding
-only personal identity:
+`path = local` reads `~/.config/git/local`. That file is per-user and untracked,
+holding only personal identity:
 
 ```ini
 # ~/.config/git/local  (yours; never committed)
 [user]
     name = Your Name
     email = you@remerge.io
-    # signingkey = ...        # optional, later
-# [commit]
-#     gpgsign = true          # optional, later
 ```
+
+`git/local.example` is the tracked template with exactly the two `[user]` lines
+above (commented). **No signing example** — SSH/GPG signing is deferred to a
+later ring.
 
 - A **missing** include is silently ignored by git, so before identity is set,
-  git shows its normal "tell me who you are" prompt on first commit — no errors,
-  no fake identity.
-- `git config user.email` reflects the real value once set; signing is a
-  future drop-in.
+  git shows its normal "tell me who you are" prompt on first commit.
+- `git config user.email` reflects the real value once set.
 - `install.sh` copies `git/local.example` → `git/local` on first install if
-  absent, giving fresh users a ready-to-edit file. `zsh/.zshrc` is untouched.
+  absent. `zsh/.zshrc` is untouched.
 - `git/.gitignore` (`/local`) keeps the per-user file out of version control.
-
-**Impersonal `git/config` contents** (each line byte-identical to upstream,
-personal/signing sections omitted, plus the `[include]`):
-
-```ini
-[advice]
-	detachedHead = false
-
-[branch]
-	sort = -committerdate
-
-[color]
-	ui = true
-
-[diff]
-	renames = copies
-
-[init]
-	defaultBranch = main
-
-[pull]
-	ff = only
-
-[push]
-	followTags = true
-	autoSetupRemote = true
-
-[rerere]
-	enabled = true
-
-[include]
-	path = local
-```
-
-Omitted from upstream's `git/config`: `[user]`, `[gpg]`, `[commit] gpgsign`,
-the `[filter "lfs"]` block, and the personal `[alias]` entries.
 
 **Caveat (documented in README):** because the repo lives at `~/.config`, the
 tracked `git/config` *is* git's XDG global file. `git config --global …` may
@@ -310,16 +329,18 @@ until it's set.
 
 ## Verification
 
-- **Vendored config files** (`bat/config`, `git/ignore`, `wgetrc`,
-  `glow/glow.yml`, `glow/styles/catppuccin-mocha.json`) → `diff` byte-identical
-  against `hollow/dotfiles@main`.
+- **Vendored verbatim files** (`bat/config`, `git/ignore`, `wgetrc`,
+  `glow/glow.yml`, `glow/styles/catppuccin-mocha.json`, and the four `git-*`
+  scripts) → `diff` byte-identical against `hollow/dotfiles@main`.
+- **`git-*` scripts** are executable (`test -x`) and `zsh -n`-clean.
 - **`zsh/.zshrc`** → strict line-subset: every non-blank line exists in
   upstream's `.zshrc`. `zsh -n zsh/.zshrc` passes.
 - **`Brewfile`** → every entry exists in upstream's `Brewfile` except `glow`
   (the sole expected exception); `brew bundle list --file=./Brewfile --all`
   parses.
 - **`git/config`** → every line exists in upstream's `git/config` except the
-  net-new `[include]` / `path = local` lines.
+  net-new `[include]` / `path = local` lines; `git config -f git/config --list`
+  parses.
 - **Validity:** `glow/styles/catppuccin-mocha.json` parses as JSON;
   `glow/glow.yml` parses as YAML.
 - **Net-new, not checked against upstream:** `git/local.example`,
@@ -327,15 +348,18 @@ until it's set.
   `install.sh` seed step.
 - **Manual smoke test (extended):** `l` (eza, colored), `bat` paging + colored
   man pages, a `you-should-use` reminder, `df` → duf, `glow` renders a markdown
-  file with the theme, and `git config user.email` reflects `git/local` once
+  file with the theme, `gl`/`gd`/`s` work, `gcl`/`gcm` resolve the main branch
+  via `git-main-branch`, and `git config user.email` reflects `git/local` once
   set.
 
 ## Acceptance criteria
 
 - All Ring 2 tools install via `brew bundle` and their `.zshrc` blocks load
   without error on a fresh shell.
+- All 16 git aliases work, including `gcl`/`gcm`/`gdm` via the vendored `git-*`
+  subcommands and `gl`/`s`/`gcu` via the git-config aliases.
 - The faithfulness checks above pass (only the enumerated deviations differ).
 - A fresh install seeds `git/local`; editing it sets the user's git identity;
-  an unedited `git/local` (or missing one) leaves git prompting normally.
+  an unedited or missing `git/local` leaves git prompting normally.
 - `LICENSE` and the Ring 1 files remain unchanged except the `Brewfile`,
   `zsh/.zshrc`, `install.sh`, and `README.md` edits described here.
