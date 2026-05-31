@@ -288,6 +288,13 @@ zi auto wait for OMZP::rsync
 
 zi auto has"tmux" silent for OMZP::tmux
 
+# vi improved
+# https://github.com/vim/vim
+zi auto has"nvim" for neovim
+alias vim=nvim
+export VIMINIT="set nocp | source ${XDG_CONFIG_HOME}/vim/vimrc"
+export EDITOR="${commands[nvim]}"
+
 # wget: retrieve files using HTTP, HTTPS, FTP and FTPS
 # https://www.gnu.org/software/wget/
 export WGETRC="${XDG_CONFIG_HOME}/wgetrc"
