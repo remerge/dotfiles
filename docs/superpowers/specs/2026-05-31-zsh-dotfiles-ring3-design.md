@@ -9,11 +9,13 @@
 
 ## Goal
 
-Extend the merged zsh skeleton with three more tools from
-<https://github.com/hollow/dotfiles>, staying a faithful **subset** of upstream:
-a `diff` against upstream should show only deletions and the previously-trimmed
-files. Ring 3 adds a system monitor (`bottom`), a terminal multiplexer (`tmux`),
-and an editor (`neovim`), plus the one shell helper `tmux` depends on.
+Extend the merged zsh skeleton with three more configured tools plus a handful
+of standalone CLI utilities from <https://github.com/hollow/dotfiles>, staying a
+faithful **subset** of upstream: a `diff` against upstream should show only
+deletions and the previously-trimmed files. Ring 3 adds a system monitor
+(`bottom`), a terminal multiplexer (`tmux`), and an editor (`neovim`), the one
+shell helper `tmux` depends on, the `ncdu` disk-usage analyzer with its ignore
+file, and six more config-free brew utilities.
 
 Ring 3 introduces **no intentional deviations** — every kept line is
 byte-identical to upstream and every added tool is already in upstream's
@@ -23,9 +25,9 @@ byte-identical to upstream and every added tool is already in upstream's
 
 Between Ring 2 and Ring 3, upstream had a large refactor (its `Brewfile` was
 trimmed from ~130 to ~50 entries, and many `bin/*` scripts moved into `zsh/`).
-Ring 3 ignores all of that churn and ports only the three tools below plus the
-`zsh/clone` helper. The faithfulness checks compare against the pinned commit
-`9de9bf6`.
+Ring 3 ignores all of that churn and ports only the tools listed below (plus the
+`zsh/clone` helper and the `ncduignore` file). The faithfulness checks compare
+against the pinned commit `9de9bf6`.
 
 ## Scope (decided)
 
@@ -37,6 +39,11 @@ In scope:
   `tmux.conf`, and TPM auto-bootstrap via the `zsh/clone` helper.
 - **neovim** (invoked as `vim`): the upstream `.zshrc` block plus the vendored
   `vimrc` and the `vim-plug` autoloader.
+- **ncdu**: the disk-usage analyzer, with its vendored `ncduignore` file and the
+  upstream `link ncduignore .ncduignore` `.zshrc` block.
+- **Extra CLI utilities** (config-free brew entries, no `.zshrc` block): `atool`,
+  `colordiff`, `jq`, `less`, `sponge`, `watch`. (`less` already has its pager
+  `.zshrc` block from Ring 2; Ring 3 only adds the brew entry.)
 
 Out of scope / deferred:
 
@@ -57,8 +64,10 @@ all present in upstream's `Brewfile`.
 
 ### Modify
 
-- `Brewfile` — add `bottom`, `neovim`, `tmux` (alphabetical).
-- `zsh/.zshrc` — add the tmux and vim blocks (strict subset; see below).
+- `Brewfile` — add `atool`, `bottom`, `colordiff`, `jq`, `less`, `ncdu`,
+  `neovim`, `sponge`, `tmux`, `watch` (alphabetical, merged into the existing
+  list).
+- `zsh/.zshrc` — add the ncdu, tmux, and vim blocks (strict subset; see below).
 
 ### Create — vendored verbatim from `hollow/dotfiles@9de9bf6`
 
@@ -72,6 +81,8 @@ all present in upstream's `Brewfile`.
   function; vendored **non-executable** (`-rw-r-----`), matching the other
   autoloaded helpers (`add`, `has`, `link`, `uri-parse`). Depends only on
   `uri-parse`, which is already byte-identical in this repo.
+- `ncduignore` — ncdu's ignore file (one line: `Library/CloudStorage/*`). Linked
+  to `~/.ncduignore` by the `link` helper (already present).
 
 ### Not added
 
@@ -91,15 +102,29 @@ The repo lives at `~/.config`, so vendored directories map directly:
 - `vim/autoload/plug.vim` → `~/.config/vim/autoload/plug.vim` (on the vim
   runtimepath set by `vimrc`).
 - `zsh/clone` → `~/.config/zsh/clone` (autoloaded; `zsh/` is on `FPATH`).
+- `ncduignore` → `~/.config/ncduignore`, linked to `~/.ncduignore` by the
+  `.zshrc` ncdu block.
 
 ## `zsh/.zshrc` additions
 
-Both blocks below are byte-identical to upstream and inserted preserving
+All three blocks below are byte-identical to upstream and inserted preserving
 upstream's relative order. Upstream's order among the blocks this repo already
-has is `colored-man-pages → mc → rsync → tmux → tmux/xpanes → vim → wget →
+has is `colored-man-pages → mc → ncdu → rsync → tmux → tmux/xpanes → vim → wget →
 you-should-use`. With mc and xpanes skipped, the kept order is
-`colored-man-pages → rsync → tmux → vim → wget`. So **tmux** and then **vim** are
-inserted between the existing `rsync` block and the existing `wget` block.
+`colored-man-pages → ncdu → rsync → tmux → vim → wget`. So **ncdu** is inserted
+between the existing `colored-man-pages` and `rsync` blocks, and **tmux** then
+**vim** are inserted between the existing `rsync` block and the existing `wget`
+block.
+
+**ncdu:**
+
+```zsh
+# ncdu: disk usage analyzer
+# https://dev.yorhel.nl/ncdu
+link ncduignore .ncduignore
+```
+
+`link` (already present) symlinks `~/.ncduignore` → `~/.config/ncduignore`.
 
 **tmux:**
 
@@ -147,15 +172,16 @@ to upstream, which has no auto-install hook in the vimrc.
 
 ## `Brewfile` additions
 
-Add `bottom`, `neovim`, `tmux` (alphabetical). All three exist in upstream's
-`Brewfile` at the pinned commit — **no deviations**. (`tmux-xpanes` and
-`midnight-commander` are intentionally not added.)
+Add `atool`, `bottom`, `colordiff`, `jq`, `less`, `ncdu`, `neovim`, `sponge`,
+`tmux`, `watch` (alphabetical, merged into the existing list). All ten exist in
+upstream's `Brewfile` at the pinned commit — **no deviations**. (`tmux-xpanes`
+and `midnight-commander` are intentionally not added.)
 
 ## Verification
 
 - **Vendored verbatim files** (`bottom/bottom.toml`, `tmux/tmux.conf`,
-  `vim/vimrc`, `vim/autoload/plug.vim`, `zsh/clone`) → `diff` byte-identical
-  against `hollow/dotfiles@9de9bf6`.
+  `vim/vimrc`, `vim/autoload/plug.vim`, `zsh/clone`, `ncduignore`) → `diff`
+  byte-identical against `hollow/dotfiles@9de9bf6`.
 - **`zsh/clone`** is **non-executable** (matching `add`/`has`/`link`/`uri-parse`)
   and `zsh -n`-clean. It autoloads and resolves `uri-parse` (already present).
 - **`zsh/.zshrc`** → strict line-subset: every non-blank added line exists in
@@ -166,14 +192,17 @@ Add `bottom`, `neovim`, `tmux` (alphabetical). All three exist in upstream's
 - **Manual smoke test:** `btm` runs with the Catppuccin theme; `T`/`tmux` starts
   and loads the vendored `tmux.conf`, with TPM cloned and plugins installed on
   first update; `vim` launches `nvim`, sources the XDG `vimrc`, and `:PlugInstall`
-  installs the declared plugins; `echo $EDITOR` points at `nvim`.
+  installs the declared plugins; `echo $EDITOR` points at `nvim`; `~/.ncduignore`
+  is a symlink to `~/.config/ncduignore`; `atool`, `colordiff`, `jq`, `less`,
+  `sponge`, and `watch` resolve on `PATH`.
 
 ## Acceptance criteria
 
-- `bottom`, `tmux`, and `neovim` install via `brew bundle`, and the tmux/vim
-  `.zshrc` blocks load without error on a fresh shell.
+- All ten brew entries install via `brew bundle`, and the ncdu/tmux/vim `.zshrc`
+  blocks load without error on a fresh shell.
 - The vendored files are byte-identical to upstream at `9de9bf6`; `zsh/clone`
-  autoloads and lets `:tmux-update` bootstrap TPM.
+  autoloads and lets `:tmux-update` bootstrap TPM; the ncdu block links
+  `~/.ncduignore`.
 - The faithfulness checks above pass with **no** deviations.
 - `LICENSE` and all prior-ring files remain unchanged except the `Brewfile` and
   `zsh/.zshrc` edits described here.
