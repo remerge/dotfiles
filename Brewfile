@@ -1,6 +1,7 @@
 brew "atool"
 brew "bash"
 brew "bat"
+brew "bottom"
 brew "colordiff"
 brew "coreutils"
 brew "curl"
