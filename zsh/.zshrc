@@ -262,6 +262,10 @@ mkdir -p "$(dirname "${LESSHISTFILE}")"
 # https://www.nongnu.org/man-db/
 zi auto wait for OMZP::colored-man-pages
 
+# ncdu: disk usage analyzer
+# https://dev.yorhel.nl/ncdu
+link ncduignore .ncduignore
+
 # rsync: fast incremental file transfer
 # https://rsync.samba.org
 zi auto wait for OMZP::rsync
