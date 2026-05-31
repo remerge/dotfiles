@@ -21,14 +21,6 @@ Ring 3 introduces **no intentional deviations** — every kept line is
 byte-identical to upstream and every added tool is already in upstream's
 `Brewfile`.
 
-## Context: upstream refactor
-
-Between Ring 2 and Ring 3, upstream had a large refactor (its `Brewfile` was
-trimmed from ~130 to ~50 entries, and many `bin/*` scripts moved into `zsh/`).
-Ring 3 ignores all of that churn and ports only the tools listed below (plus the
-`zsh/clone` helper and the `ncduignore` file). The faithfulness checks compare
-against the pinned commit `9de9bf6`.
-
 ## Scope (decided)
 
 In scope:
@@ -47,9 +39,6 @@ In scope:
 
 Out of scope / deferred:
 
-- **mc** (midnight commander): deferred to a later ring. (Upstream ships `mc/`
-  config but no `Brewfile` entry; skipped for now.)
-- **btop**: not ported — upstream replaced it with `bottom`, which Ring 3 uses.
 - **tmux-xpanes**: deferred (its `brew "tmux-xpanes"` entry and the
   `greymd/tmux-xpanes` zi block), like fzf/atuin were deferred in Ring 2.
 
@@ -89,7 +78,6 @@ all present in upstream's `Brewfile`.
 - **bottom** has no `.zshrc` block (upstream has none); it reads
   `~/.config/bottom/bottom.toml` by default.
 - **tmux-xpanes** brew entry and zi block (deferred).
-- **mc** (deferred): no `mc/` files, no `.zshrc` block, no `Brewfile` entry.
 
 ## Path mapping
 
@@ -108,13 +96,12 @@ The repo lives at `~/.config`, so vendored directories map directly:
 ## `zsh/.zshrc` additions
 
 All three blocks below are byte-identical to upstream and inserted preserving
-upstream's relative order. Upstream's order among the blocks this repo already
-has is `colored-man-pages → mc → ncdu → rsync → tmux → tmux/xpanes → vim → wget →
-you-should-use`. With mc and xpanes skipped, the kept order is
-`colored-man-pages → ncdu → rsync → tmux → vim → wget`. So **ncdu** is inserted
-between the existing `colored-man-pages` and `rsync` blocks, and **tmux** then
-**vim** are inserted between the existing `rsync` block and the existing `wget`
-block.
+upstream's relative order. Among the blocks this repo has, upstream's order is
+`colored-man-pages → ncdu → rsync → tmux → vim → wget → you-should-use` (the
+upstream `tmux/xpanes` block, which would sit between tmux and vim, is skipped).
+So **ncdu** is inserted between the existing `colored-man-pages` and `rsync`
+blocks, and **tmux** then **vim** are inserted between the existing `rsync` block
+and the existing `wget` block.
 
 **ncdu:**
 
@@ -175,7 +162,7 @@ to upstream, which has no auto-install hook in the vimrc.
 Add `atool`, `bottom`, `colordiff`, `jq`, `less`, `ncdu`, `neovim`, `sponge`,
 `tmux`, `watch` (alphabetical, merged into the existing list). All ten exist in
 upstream's `Brewfile` at the pinned commit — **no deviations**. (`tmux-xpanes`
-and `midnight-commander` are intentionally not added.)
+is intentionally not added.)
 
 ## Verification
 
