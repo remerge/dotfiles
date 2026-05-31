@@ -26,8 +26,8 @@ In scope:
 - **Shell niceties:** pager/`less` config, `colored-man-pages`, `you-should-use`,
   `dircolors` (LS_COLORS).
 - **git:** impersonal `git/config` (settings **and** the generic alias block),
-  the global `git/ignore`, all 16 git aliases plus the `git-*` subcommands they
-  need, and per-user identity via a git `[include]`.
+  the global `git/ignore`, the selected zsh git aliases plus the `git-*`
+  subcommands they need, and per-user identity via a git `[include]`.
 
 Out of scope (still deferred): fzf/fzf-tab, atuin, git signing (SSH/GPG
 integration — to be handled in a later ring), the `git-each`/`git-parallel`
@@ -143,7 +143,7 @@ zi auto has"duf" wait for duf
 zi auto has"eza" wait for eza
 ```
 
-**git (completion + all 16 aliases):**
+**git (completion + the selected zsh aliases):**
 
 ```zsh
 # git: distributed version control system
@@ -155,11 +155,9 @@ alias ga="git add --all"
 alias gap="git add --patch"
 alias gcl="git checkout-latest main"
 alias gcm="git co \$(git main-branch)"
-alias gcu="git co upstream"
 alias gd="git diff"
 alias gdc="git diff --cached"
 alias gdm="git diff origin/\$(git main-branch)"
-alias gdu="git diff upstream/\$(git main-branch)"
 alias gf="git fetch --prune"
 alias gl="git lg"
 alias gp="git pull"
@@ -169,9 +167,12 @@ alias gsp="git show -p"
 alias s="git st ."
 ```
 
-Note: `gdc` is now `git diff --cached` (self-contained) per the upstream update;
-the old `dc` git-config alias is gone. The `git-each`/`git-parallel` aliases are
-**excluded** (they need the dropped `:each`/`:parallel`).
+These are the 14 selected zsh aliases (the 8 self-contained ones plus the
+requested `gcl`, `gcm`, `gdm`, `gdc`, `gl`, `s`). Note: `gdc` is now
+`git diff --cached` (self-contained) per the upstream update; the old `dc`
+git-config alias is gone. **Excluded** (not requested): the `gcu`/`gdu`
+"upstream"-remote aliases and the `git-each`/`git-parallel` batch aliases
+(which also need the dropped `:each`/`:parallel`).
 
 **glamour/glow:**
 
@@ -238,7 +239,7 @@ Dependency closure of the aliases:
 
 - `gcl` → `git checkout-latest main` → `git-checkout-latest`, which calls
   `git-main-branch`, `git-latest`, and `git-cleanup`.
-- `gcm`, `gdm`, `gdu` → `git-main-branch`.
+- `gcm`, `gdm` → `git-main-branch`.
 - `git-latest` → `git-main-branch`.
 
 So four scripts are vendored: `git-main-branch`, `git-latest`, `git-cleanup`,
@@ -356,8 +357,8 @@ until it's set.
 
 - All Ring 2 tools install via `brew bundle` and their `.zshrc` blocks load
   without error on a fresh shell.
-- All 16 git aliases work, including `gcl`/`gcm`/`gdm` via the vendored `git-*`
-  subcommands and `gl`/`s`/`gcu` via the git-config aliases.
+- The 14 selected zsh git aliases work, including `gcl`/`gcm`/`gdm` via the
+  vendored `git-*` subcommands and `gl`/`s` via the git-config aliases.
 - The faithfulness checks above pass (only the enumerated deviations differ).
 - A fresh install seeds `git/local`; editing it sets the user's git identity;
   an unedited or missing `git/local` leaves git prompting normally.
