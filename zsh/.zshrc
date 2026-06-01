@@ -228,6 +228,9 @@ zi auto has"duf" wait for duf
 
 zi auto has"eza" wait for eza
 
+# ghostty
+add path "${GHOSTTY_BIN_DIR}"
+
 # git: distributed version control system
 # https://github.com/git/git
 zi auto id-as"git" as"completion" blockf mv"git->_git" wait for \
