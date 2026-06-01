@@ -286,6 +286,17 @@ zi auto wait for OMZP::colored-man-pages
 # https://dev.yorhel.nl/ncdu
 link ncduignore .ncduignore
 
+# mise: dev tools, env vars, task runner
+# https://github.com/jdx/mise
+export MISE_SOPS_AGE_KEY_FILE="${XDG_CONFIG_HOME}/sops/age/keys.txt"
+
+:mise-load() {
+    local _mise_cmd_not_found
+    eval "$(mise activate zsh)"
+}
+
+zi auto has"mise" for jdx/mise
+
 # rsync: fast incremental file transfer
 # https://rsync.samba.org
 zi auto wait for OMZP::rsync
