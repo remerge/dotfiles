@@ -290,6 +290,21 @@ link ncduignore .ncduignore
 # https://rsync.samba.org
 zi auto wait for OMZP::rsync
 
+# ssh: secure shell
+# https://www.openssh.com
+mkdir -p "${HOME}/.ssh" "${XDG_CACHE_HOME}"/ssh
+chmod 0700 "${HOME}/.ssh"
+
+link ssh/config .ssh/config
+chmod 0600 "${HOME}/.ssh/config"
+
+# https://1password.community/discussion/comment/660153/#Comment_660153
+if [[ -e "${HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock" ]]; then
+    export SSH_AUTH_SOCK="${HOME}/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+else
+    zi auto silent for OMZP::ssh-agent
+fi
+
 # tmux: a terminal multiplexer
 # https://github.com/tmux/tmux
 :tmux-load() {
