@@ -301,6 +301,10 @@ zi auto has"mise" for jdx/mise
 # https://rsync.samba.org
 zi auto wait for OMZP::rsync
 
+# sops: editor of encrypted files (age, gpg, cloud KMS)
+# https://github.com/getsops/sops
+export SOPS_AGE_KEY_FILE="${XDG_CONFIG_HOME}/sops/age/keys.txt"
+
 # ssh: secure shell
 # https://www.openssh.com
 mkdir -p "${HOME}/.ssh" "${XDG_CACHE_HOME}"/ssh
