@@ -260,6 +260,14 @@ alias grh="git reset HEAD"
 alias gsp="git show -p"
 alias s="git st ."
 
+# gnupg: GNU privacy guard
+# https://gnupg.org/
+export GPG_TTY="${TTY}"
+export GNUPGHOME="${XDG_DATA_HOME}/gnupg"
+mkdir -p "${GNUPGHOME}"
+chmod 0700 "${GNUPGHOME}"
+zi auto wait for OMZP::gpg-agent
+
 # glamour/glow
 export GLAMOUR_STYLE="${HOME}/.config/glow/styles/catppuccin-mocha.json"
 export GLOW_STYLE="${GLAMOUR_STYLE}"
