@@ -28,7 +28,7 @@ In scope:
 - **age**: `brew "age"` only. No `.zshrc` block, no config — `age` is surfaced
   by the `*_AGE_KEY_FILE` variables in the mise and sops blocks.
 - **sops**: `brew "sops"` plus the sops `.zshrc` block (`SOPS_AGE_KEY_FILE`
-  export). No vendored config file (see deviations).
+  export) and the vendored `sops/.gitignore` (ignores `age/keys.txt`).
 
 Out of scope / deferred:
 
@@ -42,15 +42,15 @@ Out of scope / deferred:
 
 Every kept line stays byte-identical to upstream. `zsh/.zshrc` remains a strict
 line-subset: only upstream lines, re-inserted at their original relative
-positions. Ring 6 introduces **two deviations**, both deletions consistent with
-the subset principle:
+positions. Ring 6 introduces **one deviation**, a deletion consistent with the
+subset principle:
 
 1. **`mise/config.toml`** is vendored with the six `[tools]` entries removed,
    leaving only the `[tools]` header — mise installs and activates but manages no
    global tools yet.
-2. **`sops/.gitignore`** (which upstream still has at `1c3018c`) is **not
-   vendored**. Upstream will drop this file shortly; once it does and the pin is
-   bumped, the omission stops being a deviation.
+
+`sops/.gitignore` **is** vendored byte-identical to upstream (it ignores
+`age/keys.txt`).
 
 All three brews — `age`, `mise`, `sops` — exist in upstream's `Brewfile` at
 `1c3018c` (`sops` was just added upstream), so there are **no Brewfile
@@ -71,9 +71,10 @@ deviations**.
   [tools]
   ```
 
+- `sops/.gitignore` — byte-identical to upstream (`age/keys.txt`).
+
 ### Not added
 
-- **`sops/.gitignore`** — intentionally omitted (see deviations).
 - **age** needs no vendored config; the key file (`~/.config/sops/age/keys.txt`)
   is user runtime state and is never created or tracked by this ring.
 
@@ -84,9 +85,11 @@ The repo lives at `~/.config`, so vendored directories map directly:
 - `mise/config.toml` → `~/.config/mise/config.toml` — mise's global config path
   on macOS (`$XDG_CONFIG_HOME/mise/config.toml`). With an empty `[tools]`, mise
   has a valid global config that declares no tools.
+- `sops/.gitignore` → `~/.config/sops/.gitignore`; it ignores `age/keys.txt` so
+  the user's private age key stays out of git while the directory is tracked.
 - The age key file referenced by both blocks
   (`${XDG_CONFIG_HOME}/sops/age/keys.txt`) is **not** created by this ring; the
-  user supplies it. Nothing under `sops/` is tracked.
+  user supplies it.
 
 ## `zsh/.zshrc` additions
 
@@ -138,13 +141,14 @@ All three exist in upstream's `Brewfile` at `1c3018c` — **no deviations**.
 
 - **`mise/config.toml`** → equals upstream's with exactly the six `[tools]`
   entry lines removed (only the `[tools]` header remains); the file is valid TOML.
+- **`sops/.gitignore`** → byte-identical to upstream (`diff` empty).
 - **`zsh/.zshrc`** → strict line-subset: every non-blank added line exists in
   upstream's `.zshrc`. `zsh -n zsh/.zshrc` passes.
 - **`Brewfile`** → `age`, `mise`, `sops` all exist in upstream's `Brewfile`;
   `brew bundle list --file=./Brewfile --all` parses.
 - **Faithfulness audit:** `comm -23` of our `brew`/`cask` lines against
-  upstream's is empty (no deviations); the only file-level deviations are the
-  emptied `mise/config.toml` `[tools]` and the omitted `sops/.gitignore`.
+  upstream's is empty (no deviations); the only file-level deviation is the
+  emptied `mise/config.toml` `[tools]`.
 - **Manual smoke test:** `brew bundle install` installs `age`, `mise`, `sops`;
   on a fresh shell the mise and sops blocks load without error; `mise` resolves
   and `mise activate` runs; `echo $SOPS_AGE_KEY_FILE` and
@@ -155,8 +159,8 @@ All three exist in upstream's `Brewfile` at `1c3018c` — **no deviations**.
 
 - `age`, `mise`, and `sops` install via `brew bundle`, and the mise and sops
   `.zshrc` blocks load without error on a fresh shell.
-- `mise/config.toml` equals upstream's minus the `[tools]` entries; no
-  `sops/.gitignore` is added.
+- `mise/config.toml` equals upstream's minus the `[tools]` entries;
+  `sops/.gitignore` is vendored byte-identical to upstream.
 - The faithfulness checks above pass with **no Brewfile deviations**.
 - `LICENSE` and all prior-ring files remain unchanged except the `Brewfile` and
   `zsh/.zshrc` edits described here.

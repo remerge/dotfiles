@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers-extended-cc:subagent-driven-development (recommended) or superpowers-extended-cc:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Port upstream `hollow/dotfiles@1c3018c`'s `mise`, `age`, and `sops` sections into this dotfiles repo as a faithful subset (mise with an empty global tool list; no `sops/.gitignore`).
+**Goal:** Port upstream `hollow/dotfiles@1c3018c`'s `mise`, `age`, and `sops` sections into this dotfiles repo as a faithful subset (mise with an empty global tool list).
 
 **Architecture:** Three tool sections added at their upstream-relative positions. `mise` adds a `.zshrc` block, a Brewfile brew, and a vendored `mise/config.toml` (with the `[tools]` entries deleted). `age` is brew-only. `sops` adds a `.zshrc` block and a Brewfile brew (no vendored file). A final faithfulness/syntax audit confirms the subset invariant.
 
@@ -18,7 +18,7 @@
 - `zsh/.zshrc` (modify) — add the `mise` block (between ncdu and rsync) and the `sops` block (between rsync and ssh).
 - `mise/config.toml` (create) — upstream's, with the `[tools]` entries removed (header-only).
 
-Two intentional deletions (per spec): mise's `[tools]` entries are emptied, and `sops/.gitignore` is not vendored.
+One intentional deletion (per spec): mise's `[tools]` entries are emptied. `sops/.gitignore` is vendored byte-identical to upstream.
 
 ---
 
@@ -152,9 +152,10 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ### Task 2: Add the age + sops sections
 
-**Goal:** Install `age` and `sops` via Homebrew and add upstream's sops `.zshrc` block (the `SOPS_AGE_KEY_FILE` export). `age` is brew-only; no `sops/.gitignore` is vendored.
+**Goal:** Install `age` and `sops` via Homebrew, add upstream's sops `.zshrc` block (the `SOPS_AGE_KEY_FILE` export), and vendor `sops/.gitignore` byte-identical. `age` is brew-only.
 
 **Files:**
+- Create: `sops/.gitignore` (byte-identical copy from upstream — `age/keys.txt`)
 - Modify: `Brewfile` (add `brew "age"` as the first brew, before `brew "atool"`; add `brew "sops"` between `brew "rsync"` and `brew "sponge"`)
 - Modify: `zsh/.zshrc` (insert sops block immediately after the rsync block's `zi auto wait for OMZP::rsync`, before `# ssh: secure shell`)
 
@@ -162,16 +163,24 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - [ ] `Brewfile` contains `brew "age"` as the first `brew` line (before `atool`) and `brew "sops"` between `rsync` and `sponge`.
 - [ ] `zsh/.zshrc` contains the 3-line sops block exactly as upstream, between the rsync block and the ssh block.
 - [ ] Every added `.zshrc` line is byte-identical to a line in `/tmp/hollow-dotfiles/zsh/.zshrc`.
-- [ ] No `sops/.gitignore` (or any `sops/` file) is created.
+- [ ] `sops/.gitignore` is byte-identical to upstream (`age/keys.txt`).
 - [ ] `zsh -n zsh/.zshrc` exits 0.
 
-**Verify:** `zsh -n zsh/.zshrc && diff <(grep -A2 '^# sops: editor of encrypted' zsh/.zshrc) <(grep -A2 '^# sops: editor of encrypted' /tmp/hollow-dotfiles/zsh/.zshrc) && test ! -e sops` → all pass (exit 0)
+**Verify:** `zsh -n zsh/.zshrc && diff <(grep -A2 '^# sops: editor of encrypted' zsh/.zshrc) <(grep -A2 '^# sops: editor of encrypted' /tmp/hollow-dotfiles/zsh/.zshrc) && diff sops/.gitignore /tmp/hollow-dotfiles/sops/.gitignore` → all pass (exit 0)
 
 **Steps:**
 
-- [ ] **Step 1: Add the Brewfile entries**
+- [ ] **Step 1: Vendor `sops/.gitignore` and add the Brewfile entries**
 
-Edit `Brewfile`. Add `brew "age"` as the very first brew line (it sorts before `atool`):
+Copy the gitignore verbatim from upstream:
+
+```bash
+cd /Users/bene/src/remerge/dotfiles
+mkdir -p sops
+cp /tmp/hollow-dotfiles/sops/.gitignore sops/.gitignore
+```
+
+Then edit `Brewfile`. Add `brew "age"` as the very first brew line (it sorts before `atool`):
 
 ```ruby
 brew "age"
@@ -206,7 +215,7 @@ export SOPS_AGE_KEY_FILE="${XDG_CONFIG_HOME}/sops/age/keys.txt"
 
 so the result reads `… zi auto wait for OMZP::rsync → [blank] → # sops block → [blank] → # ssh …`. (The mise block from Task 1 is earlier, between ncdu and rsync — do not confuse the two insertion points.)
 
-- [ ] **Step 3: Verify parse, block match, and absence of sops/ files**
+- [ ] **Step 3: Verify parse, block match, and vendored gitignore**
 
 Run:
 ```bash
@@ -214,17 +223,17 @@ zsh -n zsh/.zshrc && echo "PARSE OK"
 diff <(grep -A2 '^# sops: editor of encrypted' zsh/.zshrc) \
      <(grep -A2 '^# sops: editor of encrypted' /tmp/hollow-dotfiles/zsh/.zshrc) \
   && echo "BLOCK IDENTICAL"
-test ! -e sops && echo "NO sops/ DIR (good)"
+diff sops/.gitignore /tmp/hollow-dotfiles/sops/.gitignore && echo "GITIGNORE IDENTICAL"
 # age + sops exist in upstream Brewfile (no deviation):
 grep -qx 'brew "age"'  /tmp/hollow-dotfiles/Brewfile && echo "AGE IN UPSTREAM"
 grep -qx 'brew "sops"' /tmp/hollow-dotfiles/Brewfile && echo "SOPS IN UPSTREAM"
 ```
-Expected: `PARSE OK`, `BLOCK IDENTICAL`, `NO sops/ DIR (good)`, `AGE IN UPSTREAM`, `SOPS IN UPSTREAM`.
+Expected: `PARSE OK`, `BLOCK IDENTICAL`, `GITIGNORE IDENTICAL`, `AGE IN UPSTREAM`, `SOPS IN UPSTREAM`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add Brewfile zsh/.zshrc
+git add Brewfile zsh/.zshrc sops/.gitignore
 git commit -m "Ring 6: add age + sops (brews + sops .zshrc block)
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
@@ -234,7 +243,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ### Task 3: Faithfulness + Brewfile audit
 
-**Goal:** Confirm the whole ring is a clean subset — no Brewfile deviations, valid Brewfile, valid zsh, and the only file-level deviations are the two intended deletions (emptied `mise/config.toml` `[tools]`, omitted `sops/.gitignore`).
+**Goal:** Confirm the whole ring is a clean subset — no Brewfile deviations, valid Brewfile, valid zsh, and the only file-level deviation is the one intended deletion (emptied `mise/config.toml` `[tools]`); `sops/.gitignore` is vendored byte-identical.
 
 **Files:**
 - None (verification only)
@@ -243,7 +252,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 - [ ] `brew bundle list --file=./Brewfile --all` parses without error and lists `age`, `mise`, `sops`.
 - [ ] `comm -23` of this repo's `brew`/`cask` lines against upstream's is empty (no entry exists here that isn't upstream).
 - [ ] `zsh -n zsh/.zshrc` exits 0.
-- [ ] `mise/config.toml` equals upstream's minus the `[tools]` entries; no `sops/.gitignore` exists in the repo.
+- [ ] `mise/config.toml` equals upstream's minus the `[tools]` entries; `sops/.gitignore` is byte-identical to upstream.
 
 **Verify:** `bash` block in Step 1 below → ends with `AUDIT CLEAN`
 
@@ -268,8 +277,8 @@ zsh -n zsh/.zshrc
 # 4. mise/config.toml = upstream minus the tool entries
 diff <(grep -v ' = ' /tmp/hollow-dotfiles/mise/config.toml) mise/config.toml
 
-# 5. no sops/.gitignore (intentional omission)
-[ ! -e sops/.gitignore ] || { echo "sops/.gitignore present (should be omitted)"; exit 1; }
+# 5. sops/.gitignore vendored byte-identical to upstream
+diff sops/.gitignore /tmp/hollow-dotfiles/sops/.gitignore
 
 echo "AUDIT CLEAN"
 ```
@@ -293,5 +302,5 @@ mise ls                                                  # no global tools liste
 
 - **Order matters:** Task 0 first (later tasks derive/diff against `/tmp/hollow-dotfiles`). Tasks 1 and 2 both edit `Brewfile` and `zsh/.zshrc` — run them sequentially to avoid edit conflicts. Task 3 last.
 - **Two insertion points in `.zshrc`:** mise goes between ncdu and rsync; sops goes between rsync and ssh. Don't merge them.
-- **Do not add** `sops/.gitignore`, any mise `[tools]` entries, a `sops/` directory, or any tool not named here.
+- **Do not add** any mise `[tools]` entries or any tool not named here.
 - **mise/config.toml** must be exactly `[tools]\n` (one line). Deriving it via `grep -v ' = '` from upstream guarantees byte-fidelity of the header.
