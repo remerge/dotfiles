@@ -5,6 +5,9 @@
 
 :za-auto-null-handler() { :; }
 
+# debug: referenced by the hooks below but never defined — silent unless $ZI_DEBUG is set
+(( ${+functions[debug]} )) || debug() { [[ -n ${ZI_DEBUG-} ]] && +zi-message "$@"; return 0; }
+
 :za-auto-init() {
     (( ${+ICE[with]} )) || return 0
 
