@@ -81,6 +81,8 @@ alias zx="sudo rm -rf ${XDG_CACHE_HOME} && zre"
 zup() {
     local oldpwd="${PWD}"
     :brew-update && \
+    :tmux-update && \
+    :gcloud-update && \
     zi self-update && \
     zi update --all
     cd "${oldpwd}"
@@ -236,6 +238,28 @@ zi auto has"duf" wait for duf
 }
 
 zi auto has"eza" wait for eza
+
+# gcloud: Google Cloud SDK
+# https://cloud.google.com/sdk
+:gcloud-update() {
+    gcloud components update || :
+}
+
+:gcloud-load() {
+    if has brew; then
+        export CLOUDSDK_HOME="/opt/homebrew/share/google-cloud-sdk"
+    else
+        export CLOUDSDK_HOME="/usr/lib64/google-cloud-sdk"
+    fi
+
+    if has "${CLOUDSDK_HOME}"; then
+        add path "${CLOUDSDK_HOME}/bin"
+        source "${CLOUDSDK_HOME}/completion.zsh.inc"
+        export CLOUDSDK_CORE_DISABLE_USAGE_REPORTING=true
+    fi
+}
+
+zi auto has"gcloud" wait1 for gcloud
 
 # ghostty
 add path "${GHOSTTY_BIN_DIR}"
