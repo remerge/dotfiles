@@ -349,6 +349,21 @@ else
     zi auto silent for OMZP::ssh-agent
 fi
 
+# opentofu: open-source terraform fork, installed via mise
+# https://github.com/opentofu/opentofu
+export TF_PLUGIN_CACHE_DIR="${XDG_CACHE_HOME}/opentofu/plugins"
+mkdir -p "${TF_PLUGIN_CACHE_DIR}"
+
+alias tf="tofu"
+alias tf-each=':each */terraform.mk(:h) do'
+alias tf-parallel=':parallel */terraform.mk(:h) do'
+
+:opentofu-load() {
+    complete -o nospace -C tofu tofu
+}
+
+zi auto with"mise" wait1 for opentofu
+
 # tmux: a terminal multiplexer
 # https://github.com/tmux/tmux
 :tmux-load() {
