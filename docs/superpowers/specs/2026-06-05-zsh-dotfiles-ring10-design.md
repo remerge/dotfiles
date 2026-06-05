@@ -13,10 +13,11 @@ Port the **vscode** tool section: the `visual-studio-code` cask, a curated set
 of VS Code extensions, the three `vscode/` config files, and the `.zshrc`
 section that symlinks the config into VS Code's user directory.
 
-This ring departs from the strict "subset only" Brewfile invariant of prior
-rings in two documented ways (see Deviations): a **curated** extension list
-(not all 91 upstream entries) that also includes **4 extensions not present
-upstream**, and an **emptied `mcp.json`**.
+This ring departs from the strict "subset only" / byte-identical invariant of
+prior rings in several documented ways (see Deviations): a **curated** extension
+list (not all 91 upstream entries) that also includes **4 extensions not present
+upstream**, a **curated `settings.json`**, and **emptied `keybindings.json` and
+`mcp.json`**.
 
 ## Scope (decided)
 
@@ -32,10 +33,13 @@ upstream**, and an **emptied `mcp.json`**.
 
 ### B. Config files (`vscode/`)
 
-- **`vscode/settings.json`** — vendored **byte-identical** to upstream
-  (mode `100644`).
-- **`vscode/keybindings.json`** — vendored **byte-identical** to upstream
-  (mode `100644`).
+- **`vscode/settings.json`** — a **curated owner version** (mode `100644`), not
+  byte-identical to upstream. Vendored from upstream, then trimmed to the keys
+  the owner wants (commit `0770dc5`). Documented deviation.
+- **`vscode/keybindings.json`** — shipped **empty**: exactly `[]` + trailing
+  newline (mode `100644`). All custom keybindings removed; not byte-identical to
+  upstream. The file is still present and symlinked so each user has a
+  dotfiles-managed `keybindings.json` to add their own. Documented deviation.
 - **`vscode/mcp.json`** — shipped **empty**: exactly
 
   ```json
@@ -48,6 +52,11 @@ upstream**, and an **emptied `mcp.json`**.
   (which registers a Playwright MCP server). The file is still present and
   symlinked so each user has a dotfiles-managed `mcp.json` to add their own
   servers. Documented deviation.
+
+All three config files are symlinked by `:vscode-load`'s `for i in settings
+keybindings mcp` loop, so the `.zshrc` section stays byte-identical to upstream;
+only the file *contents* of `keybindings.json` and `mcp.json` (and the curated
+`settings.json`) deviate.
 
 ### C. `.zshrc` vscode section
 
@@ -73,10 +82,11 @@ order is `brew → python → uv → argcomplete → vscode → 1password`; `pyt
 zi auto has"code" wait for vscode
 ```
 
-The `mcp` entry stays in the symlink loop (the "empty `mcp.json`, still linked"
-decision), so the section is byte-identical to upstream; only `mcp.json`'s
-*content* deviates. `:vscode-load` is guarded by `has "…/Code/User"`, so it is a
-no-op when VS Code has never run — no error on a fresh shell.
+All three entries stay in the symlink loop, so the section is byte-identical to
+upstream; only the linked files' *contents* deviate (curated `settings.json`,
+empty `keybindings.json`, empty `mcp.json`). `:vscode-load` is guarded by
+`has "…/Code/User"`, so it is a no-op when VS Code has never run — no error on a
+fresh shell.
 
 ## Extension list
 
@@ -129,27 +139,36 @@ Note: `catppuccin.catppuccin-vsc-pack` is an extension pack that bundles
 `catppuccin-vsc` + `catppuccin-vsc-icons`; listing all three is mildly redundant
 but harmless, and is kept as the owner curated it.
 
-`sleistner.vscode-fileutils` backs the `fileutils.renameFile` keybinding in the
-vendored `keybindings.json`.
+`sleistner.vscode-fileutils` was originally kept because upstream's
+`keybindings.json` bound `fileutils.renameFile` to F2; that keybinding is now
+removed (emptied `keybindings.json`), but the extension is retained as a useful
+file-operations helper.
 
 ## Deviations (documented)
 
-This is the first ring whose Brewfile is **not** a strict subset of upstream.
-Two intentional deviations, both owner-approved:
+This is the first ring whose Brewfile is **not** a strict subset of upstream,
+and whose vendored config files are **not** all byte-identical. Four intentional
+deviations, all owner-approved:
 
 1. **Curated extension set with additions.** Of upstream's 91 `vscode` entries,
    33 are ported and 58 are omitted; additionally **4 entries not present
    upstream** (`catppuccin.catppuccin-vsc`, `catppuccin.catppuccin-vsc-icons`,
    `catppuccin.catppuccin-vsc-pack`, `hverlin.mise-vscode`) are added because
-   the vendored `settings.json` references the Catppuccin theme/icon themes and
-   mise, which upstream never listed.
-2. **Emptied `mcp.json`.** Content is `{"servers": {}}` instead of upstream's
+   the `settings.json` references the Catppuccin theme/icon themes and mise,
+   which upstream never listed.
+2. **Curated `settings.json`.** Vendored from upstream then trimmed to the
+   owner's preferred keys (commit `0770dc5`); no longer byte-identical to
+   upstream.
+3. **Emptied `keybindings.json`.** Content is `[]` (all custom keybindings
+   removed) instead of upstream's bindings; the file remains present and
+   symlinked.
+4. **Emptied `mcp.json`.** Content is `{"servers": {}}` instead of upstream's
    Playwright MCP registration; the file remains present and symlinked.
 
 Everything else stays faithful: the cask and the 33 upstream extensions are
-byte-identical upstream lines; `settings.json` and `keybindings.json` are
-byte+mode identical to upstream; the `.zshrc` section is byte-identical at its
-upstream-relative position.
+byte-identical upstream lines; the `.zshrc` section is byte-identical at its
+upstream-relative position (the `settings keybindings mcp` symlink loop is
+unchanged — only the linked files' contents deviate).
 
 ## Dependency analysis
 
@@ -170,10 +189,10 @@ upstream-relative position.
 - `Brewfile` — add `cask "visual-studio-code"` and the 37-entry `vscode` block.
 - `zsh/.zshrc` — add the vscode section.
 
-### Create — vendored from `hollow/dotfiles@cef10b6`
-- `vscode/settings.json` (byte-identical, mode `100644`).
-- `vscode/keybindings.json` (byte-identical, mode `100644`).
-- `vscode/mcp.json` (emptied to `{"servers": {}}`, mode `100644` — deviation).
+### Create — under `vscode/` (mode `100644`)
+- `vscode/settings.json` (curated owner version — deviation).
+- `vscode/keybindings.json` (emptied to `[]` — deviation).
+- `vscode/mcp.json` (emptied to `{"servers": {}}` — deviation).
 
 ## Path mapping
 
@@ -200,9 +219,11 @@ upstream-relative position.
   entry exists. The full `vscode` block equals the sorted contents of the owner's
   curated list (37 lines).
 - **`brew bundle list --file=./Brewfile --all`** parses.
-- **Config files:** `settings.json` and `keybindings.json` mode+content identical
-  to upstream via `git ls-files -s`. `mcp.json` equals exactly `{"servers": {}}`
-  (tab-indented, trailing newline) and contains no `servers` members.
+- **Config files:** all three are mode `100644` and valid JSON.
+  `keybindings.json` equals exactly `[]` (trailing newline) and defines no
+  bindings; `mcp.json` equals exactly `{"servers": {}}` (tab-indented, trailing
+  newline) and contains no `servers` members; `settings.json` is the owner's
+  curated key set (a subset of upstream's keys).
 - **`zsh/.zshrc`:** the vscode section diffs clean against upstream's; every
   non-blank line of our `.zshrc` exists in upstream's; `zsh -n zsh/.zshrc` passes.
 - **Manual smoke test:** `brew bundle install` installs the cask + 37 extensions;
@@ -216,8 +237,9 @@ upstream-relative position.
   37-line sorted `vscode` block equal to the curated list; the 33 upstream
   entries + cask are byte-identical upstream lines; the only non-upstream
   `vscode` entries are the 4 approved additions; `brew bundle list --all` parses.
-- `vscode/settings.json` and `vscode/keybindings.json` are byte+mode identical to
-  upstream (`100644`); `vscode/mcp.json` is exactly `{"servers": {}}`.
+- `vscode/keybindings.json` is exactly `[]` and `vscode/mcp.json` is exactly
+  `{"servers": {}}` (both mode `100644`); `vscode/settings.json` is the owner's
+  curated key set (mode `100644`).
 - The vscode `.zshrc` section is byte-identical to upstream between the `brew` and
   `1password` blocks; `zsh -n zsh/.zshrc` passes; `.zshrc` is otherwise a strict
   line-subset of upstream.
