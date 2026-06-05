@@ -1,0 +1,72 @@
+{
+  "[ignore]": {
+    "editor.formatOnSave": false
+  },
+  "ansible.lightspeed.enabled": false,
+  "ansible.lightspeed.suggestions.enabled": false,
+  "ansible.validation.lint.enabled": false,
+  "catppuccin.italicKeywords": false,
+  "chat.agent.enabled": true,
+  "chat.autopilot.enabled": true,
+  "chat.mcp.gallery.enabled": true,
+  "chat.tools.urls.autoApprove": {
+    "https://nodejs.org/en/download": true,
+    "https://pypi.org": {
+      "approveRequest": false,
+      "approveResponse": true
+    },
+    "https://pypi.org/simple": true,
+    "https://python.org/downloads": true,
+    "https://registry.npmjs.org": true,
+    "https://www.python.org/downloads": true
+  },
+  "chat.viewSessions.orientation": "stacked",
+  "csv-preview.resizeColumns": "all",
+  "docker.extension.enableComposeLanguageServer": false,
+  "editor.cursorSurroundingLines": 5,
+  "editor.fontFamily": "'MesloLGS Nerd Font', Menlo, Monaco, 'Courier New', monospace",
+  "editor.formatOnSave": true,
+  "editor.minimap.enabled": false,
+  "editor.showFoldingControls": "always",
+  "editor.wordWrap": "on",
+  "explorer.autoReveal": false,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "files.associations": {
+    "*.alloy": "grafana-alloy",
+    "*.jinja": "jinja"
+  },
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "git.enableCommitSigning": true,
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.githubMcpServer.enabled": true,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "githubPullRequests.pullBranch": "never",
+  "go.useLanguageServer": true,
+  "makefile.configureOnOpen": false,
+  "markdown.extension.toc.levels": "2..6",
+  "mise.checkForNewMiseVersion": false,
+  "redhat.telemetry.enabled": false,
+  "search.followSymlinks": false,
+  "search.showLineNumbers": true,
+  "terminal.integrated.initialHint": false,
+  "terminal.integrated.macOptionIsMeta": true,
+  "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.stickyScroll.enabled": false,
+  "terminal.integrated.suggest.enabled": false,
+  "window.commandCenter": false,
+  "window.newWindowDimensions": "inherit",
+  "workbench.activityBar.location": "hidden",
+  "workbench.browser.showInTitleBar": false,
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.iconTheme": "catppuccin-mocha",
+  "workbench.layoutControl.enabled": false,
+  "workbench.navigationControl.enabled": false,
+  "workbench.startupEditor": "none",
+  "yaml.customTags": [
+    "!encrypted/pkcs1-oaep scalar",
+    "!vault scalar"
+  ]
+}
