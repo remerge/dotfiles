@@ -95,11 +95,18 @@ so the Brewfile stays a strict subset of upstream — no Brewfile deviation
 
 ### D. `.zshrc` python → uv → argcomplete section
 
-Inserted **byte-identical** to upstream `906b19e`, between the existing `brew`
-block (after `zi auto has"dscl" for brew`) and the `# vscode` block — restoring
-upstream's `brew → python → uv → argcomplete → vscode` order (Ring 10's spec
-explicitly noted vscode sat directly after brew only because this group was
-un-ported).
+Inserted between the existing `brew` block (after `zi auto has"dscl" for brew`)
+and the `# vscode` block — restoring upstream's
+`brew → python → uv → argcomplete → vscode` order (Ring 10's spec explicitly
+noted vscode sat directly after brew only because this group was un-ported).
+
+The **uv** and **argcomplete** sub-blocks are byte-identical to upstream. The
+**python core** sub-block carries two intentional fork deviations (Deviations
+4–5): the `python-each`/`python-parallel` aliases are dropped, and the
+`opt/python/libexec/bin` PATH addition is guarded by `has brew` so it only
+applies on macOS/brew (on Linux `HOMEBREW_PREFIX` is unset, which would
+otherwise prepend a bogus `/opt/python/libexec/bin`). `has brew` is the existing
+macOS/brew idiom used by `:brew-update` and `:gcloud-load`.
 
 ```zsh
 # python: programming language
@@ -109,10 +116,10 @@ export PIP_REQUIRE_VIRTUALENV="1"
 export PIP_USER="0"
 export PYTHONNOUSERSITE="1"
 
-add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"
-
-alias python-each=':each */python.mk(:h) do'
-alias python-parallel=':parallel */python.mk(:h) do'
+# expose brew's unversioned python/pip shims on PATH (macOS/brew only)
+if has brew; then
+    add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"
+fi
 
 # python/uv: an extremely fast Python package manager
 # https://github.com/astral-sh/uv
@@ -178,6 +185,20 @@ zi auto with"uv" for argcomplete
    formulae ever drop their `python` dependency, the unversioned `python`/`pip`
    shims silently stop resolving (`python3`/`pip3` and venv tooling are
    unaffected).
+4. **`python-each`/`python-parallel` aliases dropped.** Upstream defines
+   `alias python-each=':each */python.mk(:h) do'` and the `python-parallel`
+   mirror (the python analogues of the `tf-each`/`tf-parallel` opentofu
+   aliases). The fork omits them — they drive a `python.mk`-per-directory
+   convention not used here. Trivially re-added in a later ring if wanted.
+5. **`opt/python/libexec/bin` PATH addition guarded by `has brew`.** Upstream
+   adds it unconditionally; the fork wraps it in `if has brew; then … fi` so it
+   applies on macOS/brew only. On the best-effort Linux path `HOMEBREW_PREFIX`
+   is unset, and an unconditional `add path` would prepend a bogus
+   `/opt/python/libexec/bin`. `has brew` is the same macOS/brew idiom used by
+   `:brew-update` and `:gcloud-load`.
+
+Deviations 4–5 mean the **python core** sub-block is no longer byte-identical to
+upstream; the **uv** and **argcomplete** sub-blocks remain byte-identical.
 
 ## Dependency analysis
 
@@ -236,9 +257,15 @@ zi auto with"uv" for argcomplete
   `100644`. `python3 -c "import os; os.environ.pop('XDG_DATA_HOME', None);
   exec(open('python/startup.py').read()); print('ok')"` prints `ok` (survives
   unset `XDG_DATA_HOME` and an empty/missing history file).
-- **`zsh/.zshrc`:** the section diffs clean against upstream `906b19e`;
-  `zsh -n zsh/.zshrc` passes; the `.zshrc` remains a strict non-blank-line subset
-  of upstream.
+- **`zsh/.zshrc`:** the **uv** and **argcomplete** sub-blocks (from
+  `# python/uv:` through `zi auto with"uv" for argcomplete`) diff clean against
+  upstream `906b19e`; the **python core** sub-block matches the deviated form in
+  §D (no `python-each`/`python-parallel`; `add path …/opt/python/libexec/bin`
+  wrapped in `if has brew; then … fi`); `zsh -n zsh/.zshrc` passes. The `.zshrc`
+  is no longer a strict line-subset of upstream — the only fork-only non-blank
+  lines are exactly three: the guard comment, `if has brew; then`, and the
+  now-indented `add path …/opt/python/libexec/bin` (`fi` already exists
+  elsewhere upstream).
 - **Fresh-shell smoke test (observed, on this machine):**
   - `zsh -ic 'echo home=${PYTHONHOME:-unset}; echo startup=$PYTHONSTARTUP; echo
     rv=$PIP_REQUIRE_VIRTUALENV nus=$PYTHONNOUSERSITE; command -v python3'` →
@@ -260,10 +287,13 @@ zi auto with"uv" for argcomplete
   upstream `906b19e`.
 - `mise/config.toml` has the `[settings]` `python.uv_venv_auto = "create|source"`
   block and no global `python` tool.
-- `zsh/.zshrc` has the python → uv → argcomplete section, byte-identical to
-  upstream, between the `brew` and `vscode` blocks; `zsh -n` passes; `.zshrc`
-  stays a strict non-blank-line subset of upstream.
-- No README change; no `:checkov-eval` block.
+- `zsh/.zshrc` has the python → uv → argcomplete section between the `brew` and
+  `vscode` blocks; `zsh -n` passes. The uv + argcomplete sub-blocks are
+  byte-identical to upstream; the python core sub-block carries Deviations 4–5
+  (no `python-each`/`python-parallel` aliases; `add path …/opt/python/libexec/bin`
+  guarded by `has brew`).
+- No README change; no `:checkov-eval` block; the python core sub-block deviates
+  per Deviations 4–5.
 - `LICENSE` and all prior-ring files are unchanged except the `Brewfile`,
   `mise/config.toml`, and `zsh/.zshrc` edits and the two new config files
   described here.

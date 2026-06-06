@@ -248,23 +248,23 @@ git commit -m "$(printf 'IT-8323: add ruff + uv brews and Python VS Code extensi
 
 ### Task 4: Add the python → uv → argcomplete `.zshrc` section
 
-**Goal:** Insert the contiguous `python → uv → argcomplete` block into `zsh/.zshrc`, byte-identical to upstream `906b19e`, between the `brew` block and the `vscode` block.
+**Goal:** Insert the contiguous `python → uv → argcomplete` block into `zsh/.zshrc`, between the `brew` block and the `vscode` block. The uv + argcomplete sub-blocks are byte-identical to upstream `906b19e`; the python core sub-block carries two fork deviations — no `python-each`/`python-parallel` aliases, and the `opt/python/libexec/bin` PATH addition is guarded by `has brew` (macOS/brew only).
 
 **Files:**
 - Modify: `zsh/.zshrc` (insert after `zi auto has"dscl" for brew`, before `# vscode: visual studio code editor`)
 
 **Acceptance Criteria:**
-- [ ] The `python → uv → argcomplete` block is present, byte-identical to upstream, and sits immediately after the brew block and immediately before the vscode block.
+- [ ] The `python → uv → argcomplete` block sits immediately after the brew block and immediately before the vscode block. The uv + argcomplete sub-blocks are byte-identical to upstream; the python core sub-block matches the deviated form in Step 1 (no `python-each`/`python-parallel`; `add path …/opt/python/libexec/bin` wrapped in `if has brew; then … fi`).
 - [ ] `zsh -n zsh/.zshrc` passes.
-- [ ] `zsh/.zshrc` stays a strict subset of upstream's non-blank lines (no fork-only lines introduced by this task).
+- [ ] The only fork-only non-blank lines vs upstream are exactly three: the guard comment, `if has brew; then`, and the now-indented `add path …/opt/python/libexec/bin` (`fi` already exists upstream).
 - [ ] In a fresh shell: `PYTHONHOME` unset; `PYTHONSTARTUP`/`PIP_REQUIRE_VIRTUALENV=1`/`PYTHONNOUSERSITE=1` exported; `python3` resolves under `${HOMEBREW_PREFIX}`.
 
 **Verify:**
 ```bash
-diff <(git show 906b19e:zsh/.zshrc | sed -n '/^# python: programming language/,/^zi auto with"uv" for argcomplete/p') \
-     <(sed -n '/^# python: programming language/,/^zi auto with"uv" for argcomplete/p' zsh/.zshrc) && echo OK
+diff <(git show 906b19e:zsh/.zshrc | sed -n '/^# python\/uv: an extremely fast/,/^zi auto with"uv" for argcomplete/p') \
+     <(sed -n '/^# python\/uv: an extremely fast/,/^zi auto with"uv" for argcomplete/p' zsh/.zshrc) && echo OK
 ```
-→ prints `OK` (the inserted block matches upstream exactly).
+→ prints `OK` (the uv + argcomplete sub-blocks match upstream exactly; the python core sub-block deviates per Step 1).
 
 **Steps:**
 
@@ -289,10 +289,10 @@ export PIP_REQUIRE_VIRTUALENV="1"
 export PIP_USER="0"
 export PYTHONNOUSERSITE="1"
 
-add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"
-
-alias python-each=':each */python.mk(:h) do'
-alias python-parallel=':parallel */python.mk(:h) do'
+# expose brew's unversioned python/pip shims on PATH (macOS/brew only)
+if has brew; then
+    add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"
+fi
 
 # python/uv: an extremely fast Python package manager
 # https://github.com/astral-sh/uv
@@ -337,23 +337,23 @@ zi auto with"uv" for argcomplete
 # vscode: visual studio code editor
 ```
 
-- [ ] **Step 2: Verify the block matches upstream byte-for-byte.**
+- [ ] **Step 2: Verify the uv + argcomplete sub-blocks match upstream byte-for-byte.**
 
 Run:
 ```bash
-diff <(git show 906b19e:zsh/.zshrc | sed -n '/^# python: programming language/,/^zi auto with"uv" for argcomplete/p') \
-     <(sed -n '/^# python: programming language/,/^zi auto with"uv" for argcomplete/p' zsh/.zshrc) && echo OK
+diff <(git show 906b19e:zsh/.zshrc | sed -n '/^# python\/uv: an extremely fast/,/^zi auto with"uv" for argcomplete/p') \
+     <(sed -n '/^# python\/uv: an extremely fast/,/^zi auto with"uv" for argcomplete/p' zsh/.zshrc) && echo OK
 ```
-Expected: `OK`.
+Expected: `OK` (these two sub-blocks are unmodified from upstream).
 
-- [ ] **Step 3: Verify syntax and subset invariant.**
+- [ ] **Step 3: Verify syntax and that the only fork-only lines are the `has brew` guard.**
 
 Run:
 ```bash
 zsh -n zsh/.zshrc && echo "syntax-ok"
 comm -23 <(grep -vE '^[[:space:]]*$' zsh/.zshrc | sort -u) <(git show 906b19e:zsh/.zshrc | grep -vE '^[[:space:]]*$' | sort -u)
 ```
-Expected: `syntax-ok`, then **no** lines from the second command (every non-blank line of our `.zshrc` exists upstream).
+Expected: `syntax-ok`, then the second command prints **only** these three fork-only lines from Deviation 5: the comment `# expose brew's unversioned python/pip shims on PATH (macOS/brew only)`, `if has brew; then`, and the now-indented `    add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"` (upstream has it unindented). `fi` does **not** appear — it already exists elsewhere in upstream's `.zshrc`. No other fork-only lines.
 
 - [ ] **Step 4: Verify the environment in a fresh shell.**
 
@@ -427,7 +427,7 @@ This task changes no tracked files. If `brew bundle install` rewrote `Brewfile.l
 
 ## Self-Review
 
-**Spec coverage:** Spec §A (python/startup.py, pip/pip.conf)→Task 1; §B (mise [settings])→Task 2; §C (ruff/uv brews + 7 vscode extensions)→Task 3; §D (.zshrc block)→Task 4; Verification/smoke section→Tasks 1–5 Verify blocks + Task 5 end-to-end. Deviations: no README (no task — intentional), no `:checkov-eval` (the ported block omits it; Task 4 verify diffs the python→argcomplete range only, which contains no checkov), no `brew "python"` (Task 3 AC asserts absence). All covered.
+**Spec coverage:** Spec §A (python/startup.py, pip/pip.conf)→Task 1; §B (mise [settings])→Task 2; §C (ruff/uv brews + 7 vscode extensions)→Task 3; §D (.zshrc block)→Task 4; Verification/smoke section→Tasks 1–5 Verify blocks + Task 5 end-to-end. Deviations: no README (no task — intentional); no `:checkov-eval` (the ported block omits it; Task 4 verify diffs the uv→argcomplete range, which contains no checkov); no `brew "python"` (Task 3 AC asserts absence); python core sub-block drops `python-each`/`python-parallel` and guards the `opt/python/libexec/bin` PATH addition with `has brew` (Task 4 Step 1 + Deviations 4–5). All covered.
 
 **Placeholder scan:** No TBD/TODO; every code/command step shows concrete content and expected output.
 
