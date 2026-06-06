@@ -81,6 +81,7 @@ alias zx="sudo rm -rf ${XDG_CACHE_HOME} && zre"
 zup() {
     local oldpwd="${PWD}"
     :brew-update && \
+    :uv-update && \
     :tmux-update && \
     :gcloud-update && \
     zi self-update && \
