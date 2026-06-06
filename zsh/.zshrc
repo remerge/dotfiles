@@ -171,10 +171,10 @@ export PIP_REQUIRE_VIRTUALENV="1"
 export PIP_USER="0"
 export PYTHONNOUSERSITE="1"
 
-# expose brew's unversioned python/pip shims on PATH (macOS/brew only)
-if has brew; then
-    add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"
-fi
+add path "${HOMEBREW_PREFIX}/opt/python/libexec/bin"
+
+alias python-each=':each */python.mk(:h) do'
+alias python-parallel=':parallel */python.mk(:h) do'
 
 # python/uv: an extremely fast Python package manager
 # https://github.com/astral-sh/uv
