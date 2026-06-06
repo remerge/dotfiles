@@ -4,13 +4,13 @@
     {
       "id": 6,
       "subject": "Task 1: Add brew \"fzf\" to the Brewfile",
-      "status": "pending",
+      "status": "completed",
       "description": "**Goal:** Add the one new brew this ring needs (`fzf`, the engine behind fzf-tab and `FZF_DEFAULT_OPTS`) in alphabetically-sorted position — byte-identical to upstream's line.\n\n**Files:**\n- Modify: `Brewfile`\n\n**Acceptance Criteria:**\n- [ ] `brew \"fzf\"` sits between `brew \"findutils\"` and `brew \"gawk\"`.\n- [ ] The added line is byte-identical to upstream's (`brew \"fzf\"`).\n- [ ] No new fork-only Brewfile line: the only fork-only line vs upstream is still the pre-existing Ring-10 `vscode \"davidanson.vscode-markdownlint\"`.\n- [ ] `brew bundle list --file=./Brewfile --all` parses without error.\n\n**Verify:** `comm -13 <(git show 236cfef:Brewfile | sort) <(sort Brewfile)` -> prints only `vscode \"davidanson.vscode-markdownlint\"`; `brew \"fzf\"` does NOT appear.\n\n**Steps:** insert `brew \"fzf\"` after `brew \"findutils\"`, before `brew \"gawk\"`; verify the comm output is exactly the one pre-existing deviation and brew bundle parses; commit.\n\n```json:metadata\n{\"files\": [\"Brewfile\"], \"verifyCommand\": \"comm -13 <(git show 236cfef:Brewfile | sort) <(sort Brewfile)\", \"acceptanceCriteria\": [\"brew fzf between findutils and gawk\", \"added line byte-identical to upstream 236cfef\", \"no new fork-only Brewfile line (only pre-existing vscode davidanson.vscode-markdownlint)\", \"brew bundle list --all parses\"]}\n```"
     },
     {
       "id": 7,
       "subject": "Task 2: Rework the .zshrc completion setup and add fzf + fzf-tab",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [
         6
       ],
@@ -19,7 +19,7 @@
     {
       "id": 8,
       "subject": "Task 3: Install fzf and run the end-to-end byte-identity + smoke check",
-      "status": "pending",
+      "status": "completed",
       "blockedBy": [
         6,
         7
