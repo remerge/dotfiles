@@ -69,11 +69,13 @@
 	"editor.formatOnSave": true,
 	"editor.minimap.enabled": false,
 	"editor.showFoldingControls": "always",
+	"editor.tabSize": 2,
 	"editor.wordWrap": "on",
 	"files.eol": "\n",
 	"files.insertFinalNewline": true,
 	"files.trimFinalNewlines": true,
 	"files.trimTrailingWhitespace": true,
+	"git.openRepositoryInParentFolders": "never",
 	"go.useLanguageServer": true,
 	"gopls": {
 		"formatting.gofumpt": true
@@ -90,6 +92,7 @@
 	},
 	"markdown.extension.toc.levels": "2..6",
 	"mise.checkForNewMiseVersion": false,
+	"python.terminal.activateEnvironment": false,
 	"redhat.telemetry.enabled": false,
 	"search.followSymlinks": false,
 	"search.showLineNumbers": true,
@@ -99,5 +102,6 @@
 	"terminal.integrated.stickyScroll.enabled": false,
 	"terminal.integrated.suggest.enabled": false,
 	"workbench.colorTheme": "Catppuccin Mocha",
-	"workbench.iconTheme": "catppuccin-mocha"
+	"workbench.iconTheme": "catppuccin-mocha",
+	"workbench.secondarySideBar.defaultVisibility": "hidden"
 }
