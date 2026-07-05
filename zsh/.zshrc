@@ -197,7 +197,7 @@ link "${HISTFILE}" .zsh_history
 }
 
 :brew-load() {
-	alias bbd="brew bundle dump -f"
+	alias bbd="brew bundle dump --no-describe --force"
 	alias bz="brew uninstall --zap"
 }
 
@@ -529,7 +529,7 @@ zi auto has"fzf" wait1 for fzf
 :gcloud-update() {
 	# --quiet only skips prompts; the banner and progress output bypass
 	# --verbosity, so silence everything (failures are ignored anyway).
-	gcloud components update --quiet > /dev/null 2>&1 || :
+	gcloud components update --quiet >/dev/null 2>&1 || :
 }
 
 :gcloud-load() {
@@ -625,6 +625,7 @@ zi auto has"ncdu" wait1 for ncdu
 :opentofu-init() {
 	export TF_PLUGIN_CACHE_DIR="${XDG_CACHE_HOME}/opentofu/plugins"
 	mkdirp "${TF_PLUGIN_CACHE_DIR}"
+	link opentofu .terraform.d
 }
 
 :opentofu-load() {
