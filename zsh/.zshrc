@@ -476,16 +476,6 @@ zi auto has"atuin" wait1 for atuin
 zi auto has"bat" wait1 for bat
 # endregion
 
-# region claude: AI assistant by Anthropic
-# https://claude.ai
-:claude-init() {
-	export CLAUDE_CODE_NEW_INIT=1
-	export ENABLE_CLAUDEAI_MCP_SERVERS=true
-}
-
-zi auto has"claude" wait1 for claude
-# endregion
-
 # region colima: container runtimes on macOS with minimal setup
 # https://github.com/abiosoft/colima
 :colima-init() {
