@@ -10,9 +10,18 @@ unfocused-split-fill = #000000
 # macOS
 macos-non-native-fullscreen = visible-menu
 
-# macOS clipboard keybindings
-keybind = super+c=copy_to_clipboard
-keybind = super+v=paste_from_clipboard
+# macOS line + word navigation
+# Ghostty's defaults are shell-friendly for these chords, but not Vim-friendly:
+#   Cmd+Left/Right     defaults to Ctrl-A/Ctrl-E
+#   Option+Left/Right  defaults to Esc-b/Esc-f
+# Send standard terminal navigation sequences instead so ZLE, Vim, and Neovim
+# can all keep their own defaults/mappings:
+#   Cmd+Left/Right     -> Home/End
+#   Option+Left/Right  -> Shift+Left/Shift+Right
+keybind = super+arrow_left=csi:H
+keybind = super+arrow_right=csi:F
+keybind = alt+arrow_left=csi:1;2D
+keybind = alt+arrow_right=csi:1;2C
 
 # scrollback
 scrollback-limit = 134217728
@@ -21,3 +30,7 @@ scrollback-limit = 134217728
 working-directory = home
 window-inherit-working-directory = false
 tab-inherit-working-directory = false
+
+# macOS prompt editing
+keybind = alt+backspace=text:\x1b\x7f
+keybind = shift+enter=text:\n
