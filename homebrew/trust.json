@@ -1,0 +1,11 @@
+{
+  "trustedformulae": [
+    "hashicorp/tap/consul",
+    "hashicorp/tap/consul-template",
+    "hashicorp/tap/nomad",
+    "hashicorp/tap/nomad-pack",
+    "hashicorp/tap/terraform",
+    "hashicorp/tap/terraform-ls",
+    "hashicorp/tap/vault"
+  ]
+}
