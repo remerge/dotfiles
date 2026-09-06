@@ -183,10 +183,10 @@ zmodload zsh/terminfo 2>/dev/null || true
 # Application cursor/keypad mode makes terminfo Home/End/arrow sequences match
 # what Ghostty sends while ZLE is active. Hook instead of replacing
 # zle-line-init/finish so later widgets can coexist.
-if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
+if ((${+terminfo[smkx]})) && ((${+terminfo[rmkx]})); then
 	autoload -Uz add-zle-hook-widget
-	:zle-application-mode-start() { echoti smkx }
-	:zle-application-mode-stop() { echoti rmkx }
+	:zle-application-mode-start() { echoti smkx; }
+	:zle-application-mode-stop() { echoti rmkx; }
 	add-zle-hook-widget line-init :zle-application-mode-start
 	add-zle-hook-widget line-finish :zle-application-mode-stop
 fi
@@ -345,10 +345,6 @@ zi auto has"python3" for python
 	uv tool upgrade --all
 }
 
-:uv-eval() {
-	uv generate-shell-completion zsh
-}
-
 zi auto has"uv" for uv
 # endregion
 
@@ -363,10 +359,6 @@ zi auto has"uv" for uv
 :argcomplete-fix-ifs() {
 	local code="$(cat)"
 	print -r -- "${code//_describe /IFS=$' \t\n' _describe }"
-}
-
-:register-python-argcomplete() {
-	register-python-argcomplete --shell zsh "$@" | :argcomplete-fix-ifs
 }
 
 :argcomplete-eval() {
@@ -416,15 +408,6 @@ zi auto has"npm" wait1 for npm
 zi auto has"bun" wait1 for bun
 # endregion
 
-# region js/biome: formatter & linter for the web (JS/TS/JSON/CSS)
-# https://biomejs.dev
-:biome-eval() {
-	biome completions zsh
-}
-
-zi auto has"biome" for biome
-# endregion
-
 # region ruby: programming language
 # https://www.ruby-lang.org
 :ruby-init() {
@@ -445,8 +428,11 @@ zi auto has"ruby" for ruby
 
 # region 1password: remembers all your passwords for you
 # https://1password.com
-:1password-cli-eval() {
-	chmod 0700 "${XDG_CONFIG_HOME}/op"
+:1password-cli-init() {
+	mkdirp "${XDG_CONFIG_HOME}/op" 0700
+}
+
+:1password-cli-completion() {
 	op completion zsh
 }
 
@@ -648,8 +634,7 @@ add path "${GHOSTTY_BIN_DIR}"
 	alias s="git st ."
 }
 
-zi auto id-as"git" as"completion" blockf mv"git->_git" wait1 for \
-	https://github.com/git/git/blob/master/contrib/completion/git-completion.zsh
+zi auto has"git" wait1 for git
 # endregion
 
 # region glow: terminal markdown rendering
@@ -671,6 +656,15 @@ zi auto has"glow" wait1 for glow
 }
 
 zi auto has"gpg" wait1 for gnupg
+# endregion
+
+# region leaf: terminal markdown previewer
+# https://leaf.rivolink.mg
+:leaf-completion() {
+	leaf --auto-complete zsh:dump
+}
+
+zi auto has"leaf" wait1 for leaf
 # endregion
 
 # region less: pager configuration
@@ -870,12 +864,21 @@ fi
 # endregion
 
 # region zsh/completion: extra completion functions. Loads before compinit so they
-# land in fpath, then its atload runs compinit once — replaying the compdefs
-# queued by every completion plugin above — before fzf-tab and the widget
-# wrappers below.
+# land in fpath, then its atload runs compinit once — before fzf-tab and the
+# widget wrappers below.
+#
+# completion contract: a completer is a `#compdef` file on fpath (brew's
+# site-functions, zsh-completions, zsh/, and ${ZSH_CACHE_DIR}/completions, which
+# :<name>-completion hooks fill at install/update time), so compinit registers
+# everything itself. zi only queues `compdef` calls made while a plugin loads;
+# zicdreplay runs that queue once, here, for the synchronous blocks above
+# (argcomplete's -default-, tmux aliases) — a wait1 block calling compdef is
+# lost. bashcompinit is loaded here as well: its `complete` needs compdef, so
+# `complete -C` calls belong in wait1 :<name>-load hooks, never at top level.
 # https://github.com/zsh-users/zsh-completions
 zi auto blockf atpull'zinit creinstall -q .' \
-	atload"zicompinit; zicdreplay" wait for zsh-users/zsh-completions
+	atload"zicompinit; zicdreplay; autoload -Uz bashcompinit && bashcompinit" \
+	wait for zsh-users/zsh-completions
 # endregion
 
 # region zsh/completion: replace the completion menu with fzf-tab. Must load after compinit (above)
@@ -954,9 +957,6 @@ zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*:messages' format '%d'
 zstyle ':completion:*:warnings' format 'No matches for: %d'
 zstyle ':completion:*:corrections' format '%d (errors: %e)'
-
-# bash-style `complete -C` programmable completion (consul, nomad, terraform use it)
-autoload -U +X bashcompinit && bashcompinit
 # endregion
 
 # region zsh/f-sy-h: feature-rich syntax highlighting for ZSH (loads last, after fzf-tab)
