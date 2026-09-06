@@ -1,0 +1,17 @@
+#compdef :each :parallel
+
+# :each / :parallel take `<dir>… do <command>…`.
+
+local -i doidx=${words[(i)do]} # first `do`, or $#words+1 when absent
+
+if (( CURRENT <= doidx )); then
+	# still on the directory list; offer `do` once there is a dir
+	local -a alts=('directories:directory:_directories')
+	(( CURRENT > 2 )) && alts+=('keywords:keyword:(do)')
+	_alternative "${alts[@]}"
+	return
+fi
+
+shift doidx words
+(( CURRENT -= doidx ))
+_normal -p ${service}
