@@ -426,6 +426,9 @@ zi auto has"bun" wait1 for bun
 zi auto has"ruby" for ruby
 # endregion
 
+# add local bin so user binaries take precedence over tool/brew paths
+add path "${HOME}/.local/bin"
+
 # region 1password: remembers all your passwords for you
 # https://1password.com
 :1password-cli-init() {
@@ -626,6 +629,7 @@ add path "${GHOSTTY_BIN_DIR}"
 	alias gf="git fetch"
 	alias gl="git lg"
 	alias gp="git pull"
+	alias gr="git restore"
 	alias grh="git reset HEAD"
 	alias gsm="git switch \$(git main-branch)"
 	alias gsp="git show -p"
@@ -974,9 +978,6 @@ zi auto atload"_zsh_autosuggest_start" \
 # https://github.com/hlissner/zsh-autopair
 zi auto wait for hlissner/zsh-autopair
 # endregion
-
-# add local bin last so user binaries take precedence over tool/brew paths
-add path "${HOME}/.local/bin"
 
 # Load .envrc after shell initialization if present
 if [[ -e .envrc ]]; then
