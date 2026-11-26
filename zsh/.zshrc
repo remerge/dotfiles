@@ -327,6 +327,15 @@ zi auto has"dscl" for brew
 zi auto has"mise" for mise
 # endregion
 
+# region supabase: local development stack and project CLI
+# https://supabase.com/docs/guides/local-development
+:supabase-init() {
+	export SUPABASE_HOME="${XDG_STATE_HOME}/supabase"
+}
+
+zi auto has"supabase" for supabase
+# endregion
+
 # region python: programming language
 # https://docs.python.org/3/
 :python-init() {
@@ -459,6 +468,26 @@ add path "${HOME}/.local/bin"
 }
 
 zi auto has"op" for 1password-cli
+# endregion
+
+# region ansible: simple IT automation
+# https://github.com/ansible/ansible
+# No ANSIBLE_HOME here: an exported one overrides `home = .ansible` in each
+# repo's ansible.cfg, so every repo would share one set of roles and
+# collections. tmp/cp go to runtime and the galaxy cache to cache instead.
+:ansible-init() {
+	export ANSIBLE_GALAXY_CACHE_DIR="${XDG_CACHE_HOME}/ansible"
+	export ANSIBLE_LOCAL_TEMP="${XDG_RUNTIME_DIR}/ansible/tmp"
+	export ANSIBLE_PERSISTENT_CONTROL_PATH_DIR="${XDG_RUNTIME_DIR}/ansible/cp"
+}
+
+:ansible-load() {
+	alias ad="ansible-doc"
+	alias ai="ansible-inventory"
+	alias ap="ansible-playbook"
+}
+
+zi auto has"ansible" for ansible
 # endregion
 
 # region atuin: magical shell history with optional sync
@@ -775,6 +804,15 @@ zi auto for OMZP::rsync
 zi auto has"sops" for sops
 # endregion
 
+# region sqlite: database engine
+# https://sqlite.org
+:sqlite-init() {
+	export SQLITE_HISTORY="${XDG_DATA_HOME}/sqlite/history"
+}
+
+zi auto has"sqlite3" for sqlite
+# endregion
+
 # region ssh: secure shell
 # https://www.openssh.com
 :ssh-init() {
@@ -800,6 +838,11 @@ zi auto has"sops" for sops
 }
 
 zi auto has"ssh" for ssh
+# endregion
+
+# region sshp: Parallel SSH Executor
+# https://github.com/bahamas10/sshp
+zi make as"program" for bahamas10/sshp
 # endregion
 
 # region tmux: a terminal multiplexer
