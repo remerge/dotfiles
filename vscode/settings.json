@@ -48,8 +48,6 @@
 	"[yaml]": {
 		"editor.defaultFormatter": "redhat.vscode-yaml"
 	},
-	"catppuccin.italicKeywords": false,
-	"csv-preview.resizeColumns": "all",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.biome": "explicit",
 		"source.fixAll.ruff": "explicit",
@@ -64,6 +62,8 @@
 	"editor.showFoldingControls": "always",
 	"editor.tabSize": 2,
 	"editor.wordWrap": "on",
+	"explorer.confirmDelete": false,
+	"explorer.confirmDragAndDrop": false,
 	"files.eol": "\n",
 	"files.insertFinalNewline": true,
 	"files.trimFinalNewlines": true,
@@ -83,10 +83,12 @@
 		"https://schemastore.azurewebsites.net/": true,
 		"https://www.schemastore.org/": true
 	},
+	"markdown.extension.preview.autoShowPreviewToSide": true,
 	"markdown.extension.toc.levels": "2..6",
+	"markdown.preview.doubleClickToSwitchToEditor": true,
+	"markdown.preview.markEditorSelection": true,
 	"mise.checkForNewMiseVersion": false,
 	"python.terminal.activateEnvironment": false,
-	"redhat.telemetry.enabled": false,
 	"search.followSymlinks": false,
 	"search.showLineNumbers": true,
 	"terminal.integrated.initialHint": false,
