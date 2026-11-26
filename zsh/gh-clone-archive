@@ -1,0 +1,9 @@
+#!/usr/bin/env zsh
+emulate -L zsh
+[[ $TRACE -eq 1 ]] && set -x
+
+# clone or pull every repo of an owner, archived ones included, into
+# ~/arc/<owner>/<name>; .cloneignore files are not honoured here
+gh-repo-list "$@" |
+	parallel --bar --tagstring "[{}]" --jobs 5 \
+		clone https://github.com/{} "${HOME}/arc/{}"
