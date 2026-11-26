@@ -7,20 +7,22 @@ local dirs=("${(@)argv[1,doidx-1]}")
 local cmd=("${(@)argv[doidx+1,-1]}")
 
 # return to the calling directory even when ^C aborts the loop: the always
-# block runs on interrupts too, where a trailing popd would be skipped
+# block runs on interrupts too, where a trailing popd would be skipped.
+# every cd is silenced because chpwd hooks run inside it: direnv would
+# otherwise log loading and unloading each repo's .envrc around the output.
 local start=${PWD} dir
 {
     for dir in ${dirs[@]}; do
         echo -e "\n${dir:P}"
-        cd "${dir:P}" || continue
+        cd "${dir:P}" &>/dev/null || { print -u2 ":each: cannot cd to ${dir}"; continue }
         if (( ! $#cmd )); then
             # no command: open a shell in each dir, exit it to move to the next
             zsh -i
         else
             eval "${cmd[@]}"
         fi
-        cd "${start}"
+        cd "${start}" &>/dev/null
     done
 } always {
-    [[ ${PWD} == ${start} ]] || cd "${start}"
+    [[ ${PWD} == ${start} ]] || cd "${start}" &>/dev/null
 }
