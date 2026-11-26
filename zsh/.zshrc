@@ -461,6 +461,26 @@ add path "${HOME}/.local/bin"
 zi auto has"op" for 1password-cli
 # endregion
 
+# region ansible: simple IT automation
+# https://github.com/ansible/ansible
+# No ANSIBLE_HOME here: an exported one overrides `home = .ansible` in each
+# repo's ansible.cfg, so every repo would share one set of roles and
+# collections. tmp/cp go to runtime and the galaxy cache to cache instead.
+:ansible-init() {
+	export ANSIBLE_GALAXY_CACHE_DIR="${XDG_CACHE_HOME}/ansible"
+	export ANSIBLE_LOCAL_TEMP="${XDG_RUNTIME_DIR}/ansible/tmp"
+	export ANSIBLE_PERSISTENT_CONTROL_PATH_DIR="${XDG_RUNTIME_DIR}/ansible/cp"
+}
+
+:ansible-load() {
+	alias ad="ansible-doc"
+	alias ai="ansible-inventory"
+	alias ap="ansible-playbook"
+}
+
+zi auto has"ansible" for ansible
+# endregion
+
 # region atuin: magical shell history with optional sync
 # https://github.com/atuinsh/atuin
 :atuin-load() {
