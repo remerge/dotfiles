@@ -327,6 +327,15 @@ zi auto has"dscl" for brew
 zi auto has"mise" for mise
 # endregion
 
+# region supabase: local development stack and project CLI
+# https://supabase.com/docs/guides/local-development
+:supabase-init() {
+	export SUPABASE_HOME="${XDG_STATE_HOME}/supabase"
+}
+
+zi auto has"supabase" for supabase
+# endregion
+
 # region python: programming language
 # https://docs.python.org/3/
 :python-init() {
