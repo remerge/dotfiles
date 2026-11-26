@@ -219,8 +219,8 @@ Everyday commands get modern replacements.
 status, aliased to `l` and `lR`. [bat](https://github.com/sharkdp/bat) is a
 `cat` with syntax highlighting and git integration, and it also colorizes
 `man` pages. [duf](https://github.com/muesli/duf) is a friendlier `df`,
-aliased over it, and [ncdu](https://dev.yorhel.nl/ncdu) lets you explore disk
-usage interactively.
+aliased over it, and [dua](https://github.com/Byron/dua-cli) lets you explore
+disk usage interactively (`dua i`).
 
 [atuin](https://github.com/atuinsh/atuin) keeps a searchable, optionally
 synced shell history (`a`) — press `Ctrl-R` to search it — and

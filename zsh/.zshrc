@@ -158,6 +158,15 @@ zi id-as for z-shell/z-a-eval
 
 # region zi/auto: load plugins with conventions
 zi id-as for "${ZDOTDIR}/z-a-auto"
+
+# tool blocks below load synchronously so their aliases and commands exist when
+# the first prompt appears; only ZLE widget plugins and compinit stay in turbo.
+# Until compinit defines the real compdef, a stub queues every call (light-mode
+# disables zi's own shadowing for plugin bodies, e.g. OMZP::aws), and
+# zicdreplay registers the queue once compinit has run (zsh-completions block).
+# bashcompinit's `complete` forwards to compdef, so `complete -C` works too.
+functions[compdef]=${functions[zicompdef]}
+autoload -Uz bashcompinit && bashcompinit
 # endregion
 
 # region ohmyzsh: community driven zsh framework
@@ -191,9 +200,12 @@ if ((${+terminfo[smkx]})) && ((${+terminfo[rmkx]})); then
 	add-zle-hook-widget line-finish :zle-application-mode-stop
 fi
 
-autoload -Uz up-line-or-beginning-search down-line-or-beginning-search edit-command-line
-zle -N up-line-or-beginning-search
-zle -N down-line-or-beginning-search
+# Up/Down: :line-or-beginning-search (in ZDOTDIR) replaces the stock
+# widgets, which stall when async plugin callbacks reset $LASTWIDGET.
+zle -N up-line-or-beginning-search :line-or-beginning-search
+zle -N down-line-or-beginning-search :line-or-beginning-search
+
+autoload -Uz edit-command-line
 zle -N edit-command-line
 
 # Up/Down use prefix-history search: type a prefix, then walk only matching
@@ -385,7 +397,7 @@ zi auto has"go" for go
 	mkdirp "${XDG_DATA_HOME}/node"
 }
 
-zi auto has"node" wait1 for node
+zi auto has"node" for node
 # endregion
 
 # region js/npm: node package manager
@@ -394,7 +406,7 @@ zi auto has"node" wait1 for node
 	link npm/npmrc .npmrc
 }
 
-zi auto has"npm" wait1 for npm
+zi auto has"npm" for npm
 # endregion
 
 # region js/bun: all-in-one JavaScript runtime & toolkit
@@ -405,7 +417,7 @@ zi auto has"npm" wait1 for npm
 	add path "${BUN_INSTALL}/bin"
 }
 
-zi auto has"bun" wait1 for bun
+zi auto has"bun" for bun
 # endregion
 
 # region ruby: programming language
@@ -433,13 +445,20 @@ add path "${HOME}/.local/bin"
 # https://1password.com
 :1password-cli-init() {
 	mkdirp "${XDG_CONFIG_HOME}/op" 0700
+
+	# op refuses a group/world-accessible config dir, but a fresh clone creates
+	# it 0755; enforce 0700 without forking chmod unless the mode has drifted
+	local -a st
+	zmodload -F zsh/stat b:zstat
+	zstat -A st +mode -- "${XDG_CONFIG_HOME}/op" 2>/dev/null &&
+		(((st[1] & 8#777) != 8#700)) && chmod 0700 "${XDG_CONFIG_HOME}/op"
 }
 
 :1password-cli-completion() {
 	op completion zsh
 }
 
-zi auto has"op" wait1 for 1password-cli
+zi auto has"op" for 1password-cli
 # endregion
 
 # region atuin: magical shell history with optional sync
@@ -452,7 +471,7 @@ zi auto has"op" wait1 for 1password-cli
 	atuin init zsh --disable-up-arrow
 }
 
-zi auto has"atuin" wait1 for atuin
+zi auto has"atuin" for atuin
 # endregion
 
 # region bat: cat(1) clone with wings
@@ -462,7 +481,7 @@ zi auto has"atuin" wait1 for atuin
 	export MANPAGER="sh -c 'col -bx | bat -l man'" MANROFFOPT="-c"
 }
 
-zi auto has"bat" wait1 for bat
+zi auto has"bat" for bat
 # endregion
 
 # region colima: container runtimes on macOS with minimal setup
@@ -492,7 +511,7 @@ zi auto has"bat" wait1 for bat
 	brew services start colima &>/dev/null &|
 }
 
-zi auto has"colima" wait1 for colima
+zi auto has"colima" for colima
 # endregion
 
 # region consul: distributed, highly available service discovery
@@ -501,7 +520,7 @@ zi auto has"colima" wait1 for colima
 	complete -o nospace -C consul consul
 }
 
-zi auto has"consul" wait1 for consul
+zi auto has"consul" for consul
 # endregion
 
 # region dircolors: setup colors for ls and friends
@@ -518,7 +537,7 @@ zi auto has"consul" wait1 for consul
 	dircolors -b LS_COLORS
 }
 
-zi auto id-as"dircolors" wait1 for trapd00r/LS_COLORS
+zi auto id-as"dircolors" for trapd00r/LS_COLORS
 # endregion
 
 # region direnv: change environment based on the current directory
@@ -540,7 +559,18 @@ zi auto has"direnv" for direnv/direnv
 	link docker .docker
 }
 
-zi auto has"docker" wait1 for docker
+zi auto has"docker" for docker
+# endregion
+
+# region dua: interactive disk usage analyzer
+# https://github.com/Byron/dua-cli
+:dua-init() {
+	# scanning File Provider mounts (iCloud, Google Drive, …) is slow and can
+	# trigger downloads; an absolute dir is skipped from any starting point
+	export DUA_IGNORE_DIRS="${HOME}/Library/CloudStorage"
+}
+
+zi auto has"dua" for dua
 # endregion
 
 # region duf: better `df` alternative
@@ -549,7 +579,7 @@ zi auto has"docker" wait1 for docker
 	alias df=duf
 }
 
-zi auto has"duf" wait1 for duf
+zi auto has"duf" for duf
 # endregion
 
 # region eza: a modern replacement for ‘ls’.
@@ -563,7 +593,7 @@ zi auto has"duf" wait1 for duf
 	alias lR="l -R"
 }
 
-zi auto has"eza" wait1 for eza
+zi auto has"eza" for eza
 # endregion
 
 # region fzf: command-line fuzzy finder
@@ -578,7 +608,7 @@ zi auto has"eza" wait1 for eza
 	    --color=border:#6C7086,label:#CDD6F4"
 }
 
-zi auto has"fzf" wait1 for fzf
+zi auto has"fzf" for fzf
 # endregion
 
 # region gcloud: Google Cloud SDK
@@ -608,7 +638,7 @@ zi auto has"fzf" wait1 for fzf
 	fi
 }
 
-zi auto has"gcloud" wait1 for gcloud
+zi auto has"gcloud" for gcloud
 # endregion
 
 # region ghostty: fast, native, GPU-accelerated terminal emulator
@@ -638,7 +668,7 @@ add path "${GHOSTTY_BIN_DIR}"
 	alias s="git st ."
 }
 
-zi auto has"git" wait1 for git
+zi auto has"git" for git
 # endregion
 
 # region glow: terminal markdown rendering
@@ -648,7 +678,7 @@ zi auto has"git" wait1 for git
 	export GLOW_STYLE="${GLAMOUR_STYLE}"
 }
 
-zi auto has"glow" wait1 for glow
+zi auto has"glow" for glow
 # endregion
 
 # region gnupg: GNU privacy guard
@@ -659,7 +689,7 @@ zi auto has"glow" wait1 for glow
 	mkdirp "${GNUPGHOME}" 0700
 }
 
-zi auto has"gpg" wait1 for gnupg
+zi auto has"gpg" for gnupg
 # endregion
 
 # region leaf: terminal markdown previewer
@@ -668,7 +698,7 @@ zi auto has"gpg" wait1 for gnupg
 	leaf --auto-complete zsh:dump
 }
 
-zi auto has"leaf" wait1 for leaf
+zi auto has"leaf" for leaf
 # endregion
 
 # region less: pager configuration
@@ -682,22 +712,13 @@ zi auto has"leaf" wait1 for leaf
 zi auto has"less" for less
 # endregion
 
-# region ncdu: disk usage analyzer
-# https://dev.yorhel.nl/ncdu
-:ncdu-init() {
-	link ncduignore .ncduignore
-}
-
-zi auto has"ncdu" wait1 for ncdu
-# endregion
-
 # region nomad: workload orchestrator
 # https://github.com/hashicorp/nomad
 :nomad-load() {
 	complete -o nospace -C nomad nomad
 }
 
-zi auto has"nomad" wait1 for nomad
+zi auto has"nomad" for nomad
 # endregion
 
 # region terraform: infrastructure as code
@@ -714,7 +735,7 @@ zi auto has"nomad" wait1 for nomad
 	complete -o nospace -C terraform terraform
 }
 
-zi auto has"terraform" wait1 for terraform
+zi auto has"terraform" for terraform
 # endregion
 
 # region parallel: run commands in parallel
@@ -724,7 +745,7 @@ zi auto has"terraform" wait1 for terraform
 	mkdirp ${PARALLEL_HOME}
 }
 
-zi auto has"parallel" wait1 for parallel
+zi auto has"parallel" for parallel
 # endregion
 
 # region postgresql: object-relational database
@@ -742,7 +763,7 @@ zi auto has"psql" for postgresql
 
 # region rsync: fast incremental file transfer
 # https://rsync.samba.org
-zi auto wait1 for OMZP::rsync
+zi auto for OMZP::rsync
 # endregion
 
 # region sops: editor of encrypted files (age, gpg, cloud KMS)
@@ -751,7 +772,7 @@ zi auto wait1 for OMZP::rsync
 	export SOPS_AGE_KEY_FILE="${XDG_CONFIG_HOME}/sops/age/keys.txt"
 }
 
-zi auto has"sops" wait1 for sops
+zi auto has"sops" for sops
 # endregion
 
 # region ssh: secure shell
@@ -774,7 +795,7 @@ zi auto has"sops" wait1 for sops
 	if [[ -e "${op_sock}" ]]; then
 		export SSH_AUTH_SOCK="${op_sock}"
 	else
-		zi auto silent wait1 for OMZP::ssh-agent
+		zi auto silent for OMZP::ssh-agent
 	fi
 }
 
@@ -832,7 +853,7 @@ zi auto has"nvim" for neovim
 	done
 }
 
-zi auto has"code" wait1 for vscode
+zi auto has"code" for vscode
 # endregion
 
 # region wget: retrieve files using HTTP, HTTPS, FTP and FTPS
@@ -845,7 +866,7 @@ zi auto has"code" wait1 for vscode
 	alias wget="wget --hsts-file=\"${XDG_CACHE_HOME}/wget-hsts\""
 }
 
-zi auto has"wget" wait1 for wget
+zi auto has"wget" for wget
 # endregion
 
 # region zsh/you-should-use: reminds you to use existing aliases for commands you just typed
@@ -876,12 +897,11 @@ fi
 # :<name>-completion hooks fill at install/update time), so compinit registers
 # everything itself. zi only queues `compdef` calls made while a plugin loads;
 # zicdreplay runs that queue once, here, for the synchronous blocks above
-# (argcomplete's -default-, tmux aliases) — a wait1 block calling compdef is
-# lost. bashcompinit is loaded here as well: its `complete` needs compdef, so
-# `complete -C` calls belong in wait1 :<name>-load hooks, never at top level.
+# (argcomplete's -default-, tmux aliases, `complete -C` via bashcompinit) — a
+# turbo block loaded after this one calling compdef is lost.
 # https://github.com/zsh-users/zsh-completions
-zi auto blockf atpull'zinit creinstall -q .' \
-	atload"zicompinit; zicdreplay; autoload -Uz bashcompinit && bashcompinit" \
+zi auto blockf atpull'zinit creinstall -q zsh-completions' \
+	atload"zicompinit; zicdreplay" \
 	wait for zsh-users/zsh-completions
 # endregion
 
@@ -970,8 +990,16 @@ zi auto wait for z-shell/F-Sy-H
 
 # region zsh/autosuggestions: fish-like autosuggestions for zsh
 # https://github.com/zsh-users/zsh-autosuggestions
-zi auto atload"_zsh_autosuggest_start" \
-	wait for zsh-users/zsh-autosuggestions
+:zsh-autosuggestions-load() {
+	# F-Sy-H keeps the original of every widget it wraps under fsh-orig-*
+	# (orig-* before its 2026-08 rewrite, which autosuggestions ignores by
+	# default). Without this entry the copies get wrapped as "modify" widgets
+	# too, and every Up press fetches a needless suggestion. Must precede the
+	# first bind below.
+	ZSH_AUTOSUGGEST_IGNORE_WIDGETS+=('fsh-orig-*')
+	_zsh_autosuggest_start
+}
+zi auto wait for zsh-users/zsh-autosuggestions
 # endregion
 
 # region zsh/autopair: automatically close quotes, brackets and other delimiters
