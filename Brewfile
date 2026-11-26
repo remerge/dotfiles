@@ -15,6 +15,7 @@ brew "bun"
 brew "ccusage"
 brew "colima", restart_service: :changed
 brew "colordiff"
+brew "copier"
 brew "coreutils"
 brew "csvkit"
 brew "curl"
