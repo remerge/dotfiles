@@ -795,6 +795,15 @@ zi auto for OMZP::rsync
 zi auto has"sops" for sops
 # endregion
 
+# region sqlite: database engine
+# https://sqlite.org
+:sqlite-init() {
+	export SQLITE_HISTORY="${XDG_DATA_HOME}/sqlite/history"
+}
+
+zi auto has"sqlite3" for sqlite
+# endregion
+
 # region ssh: secure shell
 # https://www.openssh.com
 :ssh-init() {
