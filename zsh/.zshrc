@@ -822,6 +822,11 @@ zi auto has"sops" for sops
 zi auto has"ssh" for ssh
 # endregion
 
+# region sshp: Parallel SSH Executor
+# https://github.com/bahamas10/sshp
+zi make as"program" for bahamas10/sshp
+# endregion
+
 # region tmux: a terminal multiplexer
 # https://github.com/tmux/tmux
 :tmux-init() {
